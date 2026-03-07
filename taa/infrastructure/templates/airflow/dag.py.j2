@@ -36,6 +36,11 @@ with DAG(
 
     {{ task.task_id }} = {{ task.operator }}(
         task_id="{{ task.task_id }}",
+{% if task.params %}
+{% for key, value in task.params.items() %}
+        {{ key }}={{ value }},
+{% endfor %}
+{% endif %}
     )
 {% endfor %}
 

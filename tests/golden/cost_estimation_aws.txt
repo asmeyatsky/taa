@@ -1,0 +1,4 @@
+cloud_provider: AWS
+total_monthly_usd: 2990.23
+total_annual_usd: 35882.77
+breakdown_count: 4

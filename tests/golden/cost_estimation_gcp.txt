@@ -1,0 +1,14 @@
+cloud_provider: GCP
+region: me-central1
+total_monthly_usd: 1306.58
+total_annual_usd: 15678.91
+breakdown_count: 8
+breakdowns:
+  - BigQuery Storage: $144.77/mo ($1737.19/yr)
+  - BigQuery Queries: $390.26/mo ($4683.11/yr)
+  - BigQuery Streaming: $25.00/mo ($300.00/yr)
+  - Dataflow Pipelines: $410.13/mo ($4921.58/yr)
+  - Cloud Storage: $20.00/mo ($240.00/yr)
+  - Cloud KMS: $0.12/mo ($1.44/yr)
+  - Cloud Composer: $255.50/mo ($3066.00/yr)
+  - Vertex AI Notebook: $60.80/mo ($729.60/yr)

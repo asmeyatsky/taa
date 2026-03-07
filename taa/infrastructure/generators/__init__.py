@@ -12,6 +12,8 @@ from taa.infrastructure.generators.multicloud_ddl import (
     AzureSynapseDDLGenerator,
     AzureBicepGenerator,
 )
+from taa.infrastructure.generators.schema_migration import SchemaMigrationGenerator
+from taa.infrastructure.generators.data_quality import DataQualityGenerator
 
 __all__ = [
     "BigQueryDDLGenerator",
@@ -24,4 +26,6 @@ __all__ = [
     "AWSCloudFormationGenerator",
     "AzureSynapseDDLGenerator",
     "AzureBicepGenerator",
+    "SchemaMigrationGenerator",
+    "DataQualityGenerator",
 ]

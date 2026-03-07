@@ -323,6 +323,89 @@ def generate_azure(ctx: click.Context, domains: str, jurisdiction: str, output: 
         click.echo(f"  {f}")
 
 
+@generate.command("migration")
+@click.option("--domains", "-d", required=True, help="Comma-separated domain names")
+@click.option("--from-version", default="v1", help="Source schema version label")
+@click.option("--to-version", default="v2", help="Target schema version label")
+@click.option("--output", "-o", default="./output", type=click.Path(), help="Output directory")
+@click.pass_context
+def generate_migration(ctx: click.Context, domains: str, from_version: str, to_version: str, output: str) -> None:
+    """Generate schema migration DDL (ALTER TABLE statements + backward views).
+
+    Compares domain tables between two versions and produces BigQuery-compatible
+    ALTER TABLE DDL, type-change comments, and backward-compatible views.
+
+    NOTE: Currently compares the canonical schema against itself (no diff).
+    For real migrations, use 'taa schema diff --old <file> --new <file>'.
+    """
+    from taa.infrastructure.generators.schema_migration import SchemaMigrationGenerator
+    from taa.domain.value_objects.enums import TelcoDomain
+
+    container: Container = ctx.obj["container"]
+    output_dir = Path(output) / "migrations"
+    writer = container.output_writer
+    gen = SchemaMigrationGenerator()
+    files: list[str] = []
+
+    for domain_name in domains.split(","):
+        domain = TelcoDomain(domain_name)
+        tables = container.domain_repo.load_tables(domain)
+        dataset = f"{domain.value}_ds"
+
+        # Generate migration plan (old == new gives empty diff for canonical;
+        # the real use-case is taa schema diff)
+        plan = gen.generate(tables, tables, dataset, from_version, to_version)
+        sql = gen.render_sql(plan)
+
+        path = output_dir / f"{domain.value}_migration_{from_version}_to_{to_version}.sql"
+        writer.write(path, sql)
+        files.append(str(path))
+
+    click.echo(f"Success: Generated {len(files)} migration file(s)")
+    for f in files:
+        click.echo(f"  {f}")
+
+
+@generate.command("quality")
+@click.option("--domains", "-d", required=True, help="Comma-separated domain names")
+@click.option("--freshness-hours", default=24, type=int, help="Freshness SLA in hours")
+@click.option("--airflow/--no-airflow", default=False, help="Also generate Airflow task definitions")
+@click.option("--output", "-o", default="./output", type=click.Path(), help="Output directory")
+@click.pass_context
+def generate_quality(ctx: click.Context, domains: str, freshness_hours: int,
+                     airflow: bool, output: str) -> None:
+    """Generate data quality SQL assertions for BigQuery tables."""
+    from taa.infrastructure.generators.data_quality import DataQualityGenerator
+    from taa.domain.value_objects.enums import TelcoDomain
+
+    container: Container = ctx.obj["container"]
+    output_dir = Path(output) / "quality"
+    writer = container.output_writer
+    files: list[str] = []
+
+    for domain_name in domains.split(","):
+        domain = TelcoDomain(domain_name)
+        tables = container.domain_repo.load_tables(domain)
+        dataset = f"{domain.value}_ds"
+
+        gen = DataQualityGenerator(dataset_name=dataset, freshness_hours=freshness_hours)
+        sql = gen.generate_sql(tables)
+
+        path = output_dir / f"{domain.value}_quality.sql"
+        writer.write(path, sql)
+        files.append(str(path))
+
+        if airflow:
+            airflow_code = gen.generate_airflow_tasks(tables)
+            af_path = output_dir / f"{domain.value}_quality_tasks.py"
+            writer.write(af_path, airflow_code)
+            files.append(str(af_path))
+
+    click.echo(f"Success: Generated {len(files)} quality file(s)")
+    for f in files:
+        click.echo(f"  {f}")
+
+
 @generate.command("pack")
 @click.option("--domains", "-d", required=True, help="Comma-separated domain names")
 @click.option("--jurisdiction", "-j", default="SA", help="Jurisdiction code")
@@ -413,6 +496,65 @@ def schema_import(ctx: click.Context, file: str, fmt: str, domains: str | None, 
             click.echo("\nTop mappings:")
             for s in sorted(suggestions, key=lambda x: -x.confidence)[:15]:
                 click.echo(f"  {s.vendor_table}.{s.vendor_field} -> {s.canonical_table}.{s.canonical_field} ({s.confidence:.0%} {s.match_reason})")
+
+
+@schema.command("diff")
+@click.argument("old", type=click.Path(exists=True))
+@click.argument("new", type=click.Path(exists=True))
+@click.option("--from-version", default="v1", help="Source schema version label")
+@click.option("--to-version", default="v2", help="Target schema version label")
+@click.option("--output", "-o", default=None, type=click.Path(), help="Output file for migration SQL")
+@click.pass_context
+def schema_diff(ctx: click.Context, old: str, new: str, from_version: str,
+                to_version: str, output: str | None) -> None:
+    """Compare two DDL files and generate migration SQL.
+
+    Parses both files, diffs the table schemas, and outputs ALTER TABLE DDL
+    plus backward-compatible views.
+    """
+    from taa.infrastructure.schema_import import SchemaParser
+    from taa.infrastructure.generators.schema_migration import SchemaMigrationGenerator
+
+    parser = SchemaParser()
+    old_tables = parser.parse_file(old)
+    new_tables = parser.parse_file(new)
+
+    click.echo(f"Old schema: {len(old_tables)} tables")
+    click.echo(f"New schema: {len(new_tables)} tables")
+
+    gen = SchemaMigrationGenerator()
+
+    # Infer dataset name from first table or use generic name
+    dataset = "dataset"
+    if new_tables and new_tables[0].dataset_name:
+        dataset = new_tables[0].dataset_name
+    elif old_tables and old_tables[0].dataset_name:
+        dataset = old_tables[0].dataset_name
+
+    plan = gen.generate(
+        tuple(old_tables), tuple(new_tables), dataset,
+        from_version=from_version, to_version=to_version,
+    )
+
+    click.echo(f"Diffs found: {len(plan.diffs)}")
+    for d in plan.diffs:
+        if d.change_type == "added":
+            click.echo(f"  + {d.table_name}.{d.column_name}")
+        elif d.change_type == "removed":
+            click.echo(f"  - {d.table_name}.{d.column_name}")
+        elif d.change_type == "type_changed":
+            click.echo(f"  ~ {d.table_name}.{d.column_name}: {d.old_type} -> {d.new_type}")
+
+    sql = gen.render_sql(plan)
+
+    if output:
+        container: Container = ctx.obj["container"]
+        out_path = Path(output)
+        container.output_writer.write(out_path, sql)
+        click.echo(f"Migration SQL written to: {output}")
+    else:
+        if plan.diffs:
+            click.echo("\n" + sql)
 
 
 @schema.command("connect")

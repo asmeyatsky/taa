@@ -115,6 +115,7 @@ def create_server():
 
     @server.read_resource()
     async def read_resource(uri: str) -> str:
+        uri = str(uri)
         if uri == "taa://domains":
             domains = container.list_domains.execute()
             return json.dumps([d.model_dump() for d in domains], indent=2)

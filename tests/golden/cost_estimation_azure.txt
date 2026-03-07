@@ -1,0 +1,4 @@
+cloud_provider: Azure
+total_monthly_usd: 1601.09
+total_annual_usd: 19213.07
+breakdown_count: 4

@@ -99,7 +99,8 @@ class TestTerraformGenerator:
         assert "vertex_ai.tf" in files
         assert "audit_logging.tf" in files
         assert "dlp.tf" in files
-        assert len(files) == 12
+        assert "gdc.tf" in files
+        assert len(files) == 13
 
     def test_bigquery_dataset(self, renderer, test_dataset):
         gen = TerraformGenerator(renderer)
