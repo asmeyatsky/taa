@@ -94,6 +94,12 @@ class TestTerraformGenerator:
         assert "kms.tf" in files
         assert "variables.tf" in files
         assert "iam.tf" in files
+        assert "composer.tf" in files
+        assert "monitoring.tf" in files
+        assert "vertex_ai.tf" in files
+        assert "audit_logging.tf" in files
+        assert "dlp.tf" in files
+        assert len(files) == 12
 
     def test_bigquery_dataset(self, renderer, test_dataset):
         gen = TerraformGenerator(renderer)
@@ -188,3 +194,92 @@ class TestComplianceReportGenerator:
         output = gen.generate_markdown(report)
         assert "PASSED" in output
         assert "SA" in output
+
+    def test_generate_retention_ddl(self, test_table):
+        gen = ComplianceReportGenerator()
+        from taa.domain.entities.compliance_rule import ComplianceRule
+        rules = (ComplianceRule(
+            rule_id="SA-001", jurisdiction="SA", framework="PDPL",
+            applicable_pii_categories=(), data_residency_required=True,
+            encryption_required=True, kms_rotation_days=90, retention_months=24,
+        ),)
+        ddl = gen.generate_retention_ddl((test_table,), rules)
+        assert "DELETE FROM" in ddl
+        assert "subscriber_profile" in ddl
+        assert "24" in ddl
+        assert "activation_date" in ddl
+
+
+class TestAnalyticsTemplateGenerator:
+    def test_generate_single(self, renderer):
+        from taa.infrastructure.generators.analytics import AnalyticsTemplateGenerator
+        gen = AnalyticsTemplateGenerator(renderer)
+        sql = gen.generate("churn_prediction")
+        assert "churn" in sql.lower()
+        assert "SELECT" in sql or "CREATE" in sql
+
+    def test_generate_all(self, renderer):
+        from taa.infrastructure.generators.analytics import AnalyticsTemplateGenerator
+        gen = AnalyticsTemplateGenerator(renderer)
+        results = gen.generate_all()
+        assert len(results) == 5
+        assert "churn_prediction" in results
+        assert "revenue_leakage" in results
+        assert "arpu_analysis" in results
+        assert "network_quality" in results
+        assert "five_g_monetization" in results
+
+    def test_list_templates(self, renderer):
+        from taa.infrastructure.generators.analytics import AnalyticsTemplateGenerator
+        gen = AnalyticsTemplateGenerator(renderer)
+        templates = gen.list_templates()
+        assert len(templates) == 5
+
+    def test_invalid_template(self, renderer):
+        from taa.infrastructure.generators.analytics import AnalyticsTemplateGenerator
+        gen = AnalyticsTemplateGenerator(renderer)
+        with pytest.raises(ValueError, match="Unknown analytics template"):
+            gen.generate("nonexistent")
+
+
+class TestAWSRedshiftDDLGenerator:
+    def test_generate(self, renderer, test_table):
+        from taa.infrastructure.generators.multicloud_ddl import AWSRedshiftDDLGenerator
+        gen = AWSRedshiftDDLGenerator(renderer)
+        ddl = gen.generate((test_table,), "subscriber_ds")
+        assert "subscriber_profile" in ddl
+        assert "subscriber_id" in ddl
+
+    def test_generate_with_dataset(self, renderer, test_table):
+        from taa.infrastructure.generators.multicloud_ddl import AWSRedshiftDDLGenerator
+        gen = AWSRedshiftDDLGenerator(renderer)
+        ddl = gen.generate((test_table,), "test_schema")
+        assert "test_schema" in ddl
+
+
+class TestAWSCloudFormationGenerator:
+    def test_generate(self, renderer, test_dataset):
+        from taa.infrastructure.generators.multicloud_ddl import AWSCloudFormationGenerator
+        gen = AWSCloudFormationGenerator(renderer)
+        files = gen.generate((test_dataset,))
+        assert "cloudformation.yaml" in files
+        content = files["cloudformation.yaml"]
+        assert "AWSTemplateFormatVersion" in content or "AWS" in content
+
+class TestAzureSynapseDDLGenerator:
+    def test_generate(self, renderer, test_table):
+        from taa.infrastructure.generators.multicloud_ddl import AzureSynapseDDLGenerator
+        gen = AzureSynapseDDLGenerator(renderer)
+        ddl = gen.generate((test_table,), "subscriber_ds")
+        assert "subscriber_profile" in ddl
+        assert "subscriber_id" in ddl
+
+
+class TestAzureBicepGenerator:
+    def test_generate(self, renderer, test_dataset):
+        from taa.infrastructure.generators.multicloud_ddl import AzureBicepGenerator
+        gen = AzureBicepGenerator(renderer)
+        files = gen.generate((test_dataset,))
+        assert "main.bicep" in files
+        content = files["main.bicep"]
+        assert "resource" in content.lower() or "param" in content.lower()

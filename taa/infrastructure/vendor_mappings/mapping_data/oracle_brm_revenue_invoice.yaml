@@ -1,0 +1,250 @@
+vendor: oracle_brm
+domain: revenue_invoice
+mappings:
+  # --- BILL_T: Invoice/bill records ---
+  - vendor_table: BILL_T
+    vendor_field: POID_ID0
+    canonical_table: invoice
+    canonical_field: invoice_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.99
+
+  - vendor_table: BILL_T
+    vendor_field: BILL_NO
+    canonical_table: invoice
+    canonical_field: invoice_number
+    transformation: "TRIM(BILL_NO)"
+    confidence: 0.98
+
+  - vendor_table: BILL_T
+    vendor_field: ACCOUNT_OBJ_ID0
+    canonical_table: invoice
+    canonical_field: account_id
+    transformation: "CAST(ACCOUNT_OBJ_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: BILL_T
+    vendor_field: START_T
+    canonical_table: invoice
+    canonical_field: period_start_date
+    transformation: "DATE(TIMESTAMP_SECONDS(START_T))"
+    confidence: 0.95
+
+  - vendor_table: BILL_T
+    vendor_field: END_T
+    canonical_table: invoice
+    canonical_field: period_end_date
+    transformation: "DATE(TIMESTAMP_SECONDS(END_T))"
+    confidence: 0.95
+
+  - vendor_table: BILL_T
+    vendor_field: DUE_T
+    canonical_table: invoice
+    canonical_field: due_date
+    transformation: "DATE(TIMESTAMP_SECONDS(DUE_T))"
+    confidence: 0.97
+
+  - vendor_table: BILL_T
+    vendor_field: CREATED_T
+    canonical_table: invoice
+    canonical_field: invoice_date
+    transformation: "DATE(TIMESTAMP_SECONDS(CREATED_T))"
+    confidence: 0.95
+
+  - vendor_table: BILL_T
+    vendor_field: TOTAL_DUE
+    canonical_table: invoice
+    canonical_field: total_amount
+    transformation: "CAST(TOTAL_DUE AS NUMERIC)"
+    confidence: 0.97
+
+  - vendor_table: BILL_T
+    vendor_field: CURRENT_TOTAL
+    canonical_table: invoice
+    canonical_field: current_charges
+    transformation: "CAST(CURRENT_TOTAL AS NUMERIC)"
+    confidence: 0.93
+
+  - vendor_table: BILL_T
+    vendor_field: PREVIOUS_TOTAL
+    canonical_table: invoice
+    canonical_field: previous_balance
+    transformation: "CAST(PREVIOUS_TOTAL AS NUMERIC)"
+    confidence: 0.90
+
+  - vendor_table: BILL_T
+    vendor_field: SUBORDS_TOTAL
+    canonical_table: invoice
+    canonical_field: subordinate_charges
+    transformation: "CAST(SUBORDS_TOTAL AS NUMERIC)"
+    confidence: 0.82
+
+  - vendor_table: BILL_T
+    vendor_field: ADJUSTED_DUE
+    canonical_table: invoice
+    canonical_field: adjusted_amount
+    transformation: "CAST(ADJUSTED_DUE AS NUMERIC)"
+    confidence: 0.90
+
+  - vendor_table: BILL_T
+    vendor_field: DISPUTED
+    canonical_table: invoice
+    canonical_field: disputed_amount
+    transformation: "CAST(DISPUTED AS NUMERIC)"
+    confidence: 0.88
+
+  - vendor_table: BILL_T
+    vendor_field: RECVD
+    canonical_table: invoice
+    canonical_field: amount_received
+    transformation: "CAST(RECVD AS NUMERIC)"
+    confidence: 0.90
+
+  - vendor_table: BILL_T
+    vendor_field: STATUS
+    canonical_table: invoice
+    canonical_field: invoice_status
+    transformation: "CASE STATUS WHEN 0 THEN 'open' WHEN 1 THEN 'pending' WHEN 2 THEN 'closed' ELSE 'unknown' END"
+    confidence: 0.90
+
+  - vendor_table: BILL_T
+    vendor_field: CURRENCY
+    canonical_table: invoice
+    canonical_field: currency_code
+    transformation: "CASE CURRENCY WHEN 840 THEN 'USD' WHEN 978 THEN 'EUR' WHEN 826 THEN 'GBP' WHEN 682 THEN 'SAR' ELSE CAST(CURRENCY AS STRING) END"
+    confidence: 0.88
+
+  # --- ITEM_T: Invoice line items ---
+  - vendor_table: ITEM_T
+    vendor_field: POID_ID0
+    canonical_table: invoice_line_item
+    canonical_field: line_item_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: ITEM_T
+    vendor_field: BILL_OBJ_ID0
+    canonical_table: invoice_line_item
+    canonical_field: invoice_id
+    transformation: "CAST(BILL_OBJ_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: ITEM_T
+    vendor_field: ACCOUNT_OBJ_ID0
+    canonical_table: invoice_line_item
+    canonical_field: account_id
+    transformation: "CAST(ACCOUNT_OBJ_ID0 AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: ITEM_T
+    vendor_field: SERVICE_OBJ_ID0
+    canonical_table: invoice_line_item
+    canonical_field: service_id
+    transformation: "CAST(SERVICE_OBJ_ID0 AS STRING)"
+    confidence: 0.93
+
+  - vendor_table: ITEM_T
+    vendor_field: POID_TYPE
+    canonical_table: invoice_line_item
+    canonical_field: charge_type
+    transformation: "CASE WHEN POID_TYPE LIKE '%/cycle_forward%' THEN 'recurring' WHEN POID_TYPE LIKE '%/usage%' THEN 'usage' WHEN POID_TYPE LIKE '%/cycle_arrear%' THEN 'arrear' WHEN POID_TYPE LIKE '%/purchase%' THEN 'one_time' WHEN POID_TYPE LIKE '%/payment%' THEN 'payment' WHEN POID_TYPE LIKE '%/adjustment%' THEN 'adjustment' ELSE 'other' END"
+    confidence: 0.88
+
+  - vendor_table: ITEM_T
+    vendor_field: DUE
+    canonical_table: invoice_line_item
+    canonical_field: amount
+    transformation: "CAST(DUE AS NUMERIC)"
+    confidence: 0.95
+
+  - vendor_table: ITEM_T
+    vendor_field: ADJUSTED
+    canonical_table: invoice_line_item
+    canonical_field: adjusted_amount
+    transformation: "CAST(ADJUSTED AS NUMERIC)"
+    confidence: 0.88
+
+  - vendor_table: ITEM_T
+    vendor_field: DISPUTED
+    canonical_table: invoice_line_item
+    canonical_field: disputed_amount
+    transformation: "CAST(DISPUTED AS NUMERIC)"
+    confidence: 0.85
+
+  - vendor_table: ITEM_T
+    vendor_field: RECVD
+    canonical_table: invoice_line_item
+    canonical_field: received_amount
+    transformation: "CAST(RECVD AS NUMERIC)"
+    confidence: 0.88
+
+  - vendor_table: ITEM_T
+    vendor_field: CREATED_T
+    canonical_table: invoice_line_item
+    canonical_field: created_date
+    transformation: "TIMESTAMP_SECONDS(CREATED_T)"
+    confidence: 0.93
+
+  - vendor_table: ITEM_T
+    vendor_field: EFFECTIVE_T
+    canonical_table: invoice_line_item
+    canonical_field: effective_date
+    transformation: "TIMESTAMP_SECONDS(EFFECTIVE_T)"
+    confidence: 0.90
+
+  - vendor_table: ITEM_T
+    vendor_field: STATUS
+    canonical_table: invoice_line_item
+    canonical_field: item_status
+    transformation: "CASE STATUS WHEN 0 THEN 'open' WHEN 1 THEN 'pending' WHEN 2 THEN 'closed' ELSE 'unknown' END"
+    confidence: 0.88
+
+  # --- PAYMENT_T: Payment records ---
+  - vendor_table: PAYMENT_T
+    vendor_field: POID_ID0
+    canonical_table: payment
+    canonical_field: payment_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: PAYMENT_T
+    vendor_field: ACCOUNT_OBJ_ID0
+    canonical_table: payment
+    canonical_field: account_id
+    transformation: "CAST(ACCOUNT_OBJ_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: PAYMENT_T
+    vendor_field: AMOUNT
+    canonical_table: payment
+    canonical_field: payment_amount
+    transformation: "CAST(AMOUNT AS NUMERIC)"
+    confidence: 0.97
+
+  - vendor_table: PAYMENT_T
+    vendor_field: EFFECTIVE_T
+    canonical_table: payment
+    canonical_field: payment_date
+    transformation: "TIMESTAMP_SECONDS(EFFECTIVE_T)"
+    confidence: 0.95
+
+  - vendor_table: PAYMENT_T
+    vendor_field: PAY_TYPE
+    canonical_table: payment
+    canonical_field: payment_method
+    transformation: "CASE PAY_TYPE WHEN 10001 THEN 'cash' WHEN 10002 THEN 'credit_card' WHEN 10003 THEN 'direct_debit' WHEN 10005 THEN 'voucher' WHEN 10011 THEN 'bank_transfer' ELSE 'other' END"
+    confidence: 0.88
+
+  - vendor_table: PAYMENT_T
+    vendor_field: STATUS
+    canonical_table: payment
+    canonical_field: payment_status
+    transformation: "CASE STATUS WHEN 0 THEN 'pending' WHEN 1 THEN 'completed' WHEN 2 THEN 'reversed' ELSE 'unknown' END"
+    confidence: 0.85
+
+  - vendor_table: PAYMENT_T
+    vendor_field: TRANS_ID
+    canonical_table: payment
+    canonical_field: transaction_reference
+    transformation: "TRIM(TRANS_ID)"
+    confidence: 0.88

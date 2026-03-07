@@ -27,3 +27,6 @@ taa = "taa.__main__:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = ["taa/infrastructure/templates/**"]

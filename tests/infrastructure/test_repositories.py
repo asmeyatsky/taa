@@ -36,10 +36,9 @@ class TestYAMLDomainModelRepository:
         for table in tables:
             assert len(table.columns) > 0
 
-    def test_nonexistent_domain(self):
-        # usage_analytics has no yaml file
+    def test_load_usage_analytics_tables(self):
         tables = self.repo.load_tables(TelcoDomain.USAGE_ANALYTICS)
-        assert tables == ()
+        assert len(tables) >= 1
 
 
 class TestYAMLComplianceRuleRepository:

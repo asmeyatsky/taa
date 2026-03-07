@@ -43,5 +43,10 @@ class TerraformGenerator:
         files["variables.tf"] = self._renderer.render("terraform/variables.tf.j2", context)
         files["gcs.tf"] = self._renderer.render("terraform/gcs.tf.j2", context)
         files["vpc_sc.tf"] = self._renderer.render("terraform/vpc_sc.tf.j2", context)
+        files["composer.tf"] = self._renderer.render("terraform/composer.tf.j2", context)
+        files["monitoring.tf"] = self._renderer.render("terraform/monitoring.tf.j2", context)
+        files["vertex_ai.tf"] = self._renderer.render("terraform/vertex_ai.tf.j2", context)
+        files["audit_logging.tf"] = self._renderer.render("terraform/audit_logging.tf.j2", context)
+        files["dlp.tf"] = self._renderer.render("terraform/dlp.tf.j2", context)
 
         return files

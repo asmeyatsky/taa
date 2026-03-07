@@ -1,33 +1,378 @@
 vendor: huawei_cbs
 domain: subscriber
 mappings:
+  # --- CBS_SUBSCRIBER: Core subscriber identity ---
   - vendor_table: CBS_SUBSCRIBER
     vendor_field: SUBSCRIBER_KEY
     canonical_table: subscriber_profile
     canonical_field: subscriber_id
     transformation: "CAST(SUBSCRIBER_KEY AS STRING)"
-    confidence: 0.95
+    confidence: 0.99
+
   - vendor_table: CBS_SUBSCRIBER
     vendor_field: PRIMARY_IDENTITY
     canonical_table: subscriber_profile
     canonical_field: msisdn
-    transformation: ""
-    confidence: 0.90
+    transformation: "TRIM(PRIMARY_IDENTITY)"
+    confidence: 0.97
+
   - vendor_table: CBS_SUBSCRIBER
     vendor_field: IMSI
     canonical_table: subscriber_profile
     canonical_field: imsi
-    transformation: ""
+    transformation: "TRIM(IMSI)"
     confidence: 0.99
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: ICCID
+    canonical_table: subscriber_profile
+    canonical_field: iccid
+    transformation: "TRIM(ICCID)"
+    confidence: 0.98
+
   - vendor_table: CBS_SUBSCRIBER
     vendor_field: CUST_NAME
     canonical_table: subscriber_profile
     canonical_field: first_name
-    transformation: "SPLIT(CUST_NAME, ' ')[OFFSET(0)]"
+    transformation: "TRIM(SPLIT(CUST_NAME, ' ')[OFFSET(0)])"
     confidence: 0.75
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: CUST_NAME
+    canonical_table: subscriber_profile
+    canonical_field: last_name
+    transformation: "TRIM(SPLIT(CUST_NAME, ' ')[SAFE_OFFSET(1)])"
+    confidence: 0.70
+
   - vendor_table: CBS_SUBSCRIBER
     vendor_field: STATUS_CD
     canonical_table: subscriber_profile
     canonical_field: status
-    transformation: "CASE STATUS_CD WHEN 1 THEN 'active' WHEN 2 THEN 'suspended' WHEN 3 THEN 'terminated' END"
+    transformation: "CASE STATUS_CD WHEN 1 THEN 'active' WHEN 2 THEN 'suspended' WHEN 3 THEN 'terminated' WHEN 4 THEN 'pre_active' WHEN 5 THEN 'dormant' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: CREATE_DATE
+    canonical_table: subscriber_profile
+    canonical_field: activation_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CREATE_DATE)"
+    confidence: 0.90
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: EXPIRE_DATE
+    canonical_table: subscriber_profile
+    canonical_field: expiry_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', EXPIRE_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: SUB_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: subscriber_type
+    transformation: "CASE SUB_TYPE WHEN 0 THEN 'prepaid' WHEN 1 THEN 'postpaid' WHEN 2 THEN 'hybrid' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: LANGUAGE_CD
+    canonical_table: subscriber_profile
+    canonical_field: preferred_language
+    transformation: "CASE LANGUAGE_CD WHEN 1 THEN 'en' WHEN 2 THEN 'ar' WHEN 3 THEN 'fr' WHEN 4 THEN 'es' ELSE 'en' END"
+    confidence: 0.85
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: NETWORK_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: network_type
+    transformation: "CASE NETWORK_TYPE WHEN 1 THEN 'GSM' WHEN 2 THEN 'CDMA' WHEN 3 THEN 'LTE' WHEN 4 THEN '5G' ELSE 'unknown' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: MODIFY_DATE
+    canonical_table: subscriber_profile
+    canonical_field: last_modified_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', MODIFY_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: VPN_FLAG
+    canonical_table: subscriber_profile
+    canonical_field: is_vpn_member
+    transformation: "CASE VPN_FLAG WHEN 1 THEN TRUE ELSE FALSE END"
+    confidence: 0.88
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: BRAND_ID
+    canonical_table: subscriber_profile
+    canonical_field: brand
+    transformation: "CAST(BRAND_ID AS STRING)"
+    confidence: 0.80
+
+  # --- CBS_ACCOUNT: Account-level information ---
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: ACCT_KEY
+    canonical_table: subscriber_profile
+    canonical_field: account_id
+    transformation: "CAST(ACCT_KEY AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: ACCT_NAME
+    canonical_table: subscriber_profile
+    canonical_field: account_name
+    transformation: "TRIM(ACCT_NAME)"
+    confidence: 0.95
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: PAYMENT_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: payment_method
+    transformation: "CASE PAYMENT_TYPE WHEN 0 THEN 'prepaid' WHEN 1 THEN 'postpaid' WHEN 2 THEN 'credit_card' WHEN 3 THEN 'bank_transfer' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: ACCT_STATUS
+    canonical_table: subscriber_profile
+    canonical_field: account_status
+    transformation: "CASE ACCT_STATUS WHEN 1 THEN 'active' WHEN 2 THEN 'suspended' WHEN 3 THEN 'closed' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: CREDIT_LIMIT
+    canonical_table: subscriber_profile
+    canonical_field: credit_limit
+    transformation: "CAST(CREDIT_LIMIT AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: CURRENCY_CD
+    canonical_table: subscriber_profile
+    canonical_field: currency_code
+    transformation: "CASE CURRENCY_CD WHEN 1 THEN 'USD' WHEN 2 THEN 'EUR' WHEN 3 THEN 'GBP' WHEN 4 THEN 'SAR' ELSE 'USD' END"
+    confidence: 0.85
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: BILLING_CYCLE_ID
+    canonical_table: subscriber_profile
+    canonical_field: bill_cycle_id
+    transformation: "CAST(BILLING_CYCLE_ID AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: DUNNING_FLAG
+    canonical_table: subscriber_profile
+    canonical_field: is_dunning
+    transformation: "CASE DUNNING_FLAG WHEN 1 THEN TRUE ELSE FALSE END"
+    confidence: 0.88
+
+  # --- CBS_ACCT_BALANCE: Balance and wallet ---
+  - vendor_table: CBS_ACCT_BALANCE
+    vendor_field: BALANCE_ID
+    canonical_table: subscriber_balance
+    canonical_field: balance_id
+    transformation: "CAST(BALANCE_ID AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: CBS_ACCT_BALANCE
+    vendor_field: BALANCE_TYPE
+    canonical_table: subscriber_balance
+    canonical_field: balance_type
+    transformation: "CASE BALANCE_TYPE WHEN 1 THEN 'main' WHEN 2 THEN 'bonus' WHEN 3 THEN 'loyalty' WHEN 4 THEN 'data' WHEN 5 THEN 'voice' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_ACCT_BALANCE
+    vendor_field: CURRENT_BAL
+    canonical_table: subscriber_balance
+    canonical_field: current_balance
+    transformation: "CAST(CURRENT_BAL AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: CBS_ACCT_BALANCE
+    vendor_field: ACCT_KEY
+    canonical_table: subscriber_balance
+    canonical_field: account_id
+    transformation: "CAST(ACCT_KEY AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: CBS_ACCT_BALANCE
+    vendor_field: EFFECTIVE_DATE
+    canonical_table: subscriber_balance
+    canonical_field: effective_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', EFFECTIVE_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_ACCT_BALANCE
+    vendor_field: EXPIRE_DATE
+    canonical_table: subscriber_balance
+    canonical_field: expiry_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', EXPIRE_DATE)"
+    confidence: 0.95
+
+  # --- CBS_ADDRESS: Subscriber address ---
+  - vendor_table: CBS_ADDRESS
+    vendor_field: ADDRESS_LINE_1
+    canonical_table: subscriber_address
+    canonical_field: address_line_1
+    transformation: "TRIM(ADDRESS_LINE_1)"
+    confidence: 0.97
+
+  - vendor_table: CBS_ADDRESS
+    vendor_field: ADDRESS_LINE_2
+    canonical_table: subscriber_address
+    canonical_field: address_line_2
+    transformation: "TRIM(ADDRESS_LINE_2)"
+    confidence: 0.97
+
+  - vendor_table: CBS_ADDRESS
+    vendor_field: CITY
+    canonical_table: subscriber_address
+    canonical_field: city
+    transformation: "TRIM(CITY)"
+    confidence: 0.98
+
+  - vendor_table: CBS_ADDRESS
+    vendor_field: STATE_CD
+    canonical_table: subscriber_address
+    canonical_field: state
+    transformation: "TRIM(STATE_CD)"
+    confidence: 0.95
+
+  - vendor_table: CBS_ADDRESS
+    vendor_field: POSTAL_CD
+    canonical_table: subscriber_address
+    canonical_field: postal_code
+    transformation: "TRIM(POSTAL_CD)"
+    confidence: 0.97
+
+  - vendor_table: CBS_ADDRESS
+    vendor_field: COUNTRY_CD
+    canonical_table: subscriber_address
+    canonical_field: country_code
+    transformation: "TRIM(COUNTRY_CD)"
+    confidence: 0.97
+
+  - vendor_table: CBS_ADDRESS
+    vendor_field: EMAIL_ADDRESS
+    canonical_table: subscriber_profile
+    canonical_field: email
+    transformation: "LOWER(TRIM(EMAIL_ADDRESS))"
+    confidence: 0.90
+
+  - vendor_table: CBS_ADDRESS
+    vendor_field: CONTACT_PHONE
+    canonical_table: subscriber_profile
+    canonical_field: contact_phone
+    transformation: "TRIM(CONTACT_PHONE)"
+    confidence: 0.88
+
+  # --- CBS_PRODUCT / CBS_OFFERING: Product and plan ---
+  - vendor_table: CBS_PRODUCT
+    vendor_field: PRODUCT_ID
+    canonical_table: subscriber_product
+    canonical_field: product_id
+    transformation: "CAST(PRODUCT_ID AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: CBS_PRODUCT
+    vendor_field: PRODUCT_NAME
+    canonical_table: subscriber_product
+    canonical_field: product_name
+    transformation: "TRIM(PRODUCT_NAME)"
+    confidence: 0.97
+
+  - vendor_table: CBS_PRODUCT
+    vendor_field: PRODUCT_TYPE
+    canonical_table: subscriber_product
+    canonical_field: product_type
+    transformation: "CASE PRODUCT_TYPE WHEN 1 THEN 'base_plan' WHEN 2 THEN 'addon' WHEN 3 THEN 'bundle' WHEN 4 THEN 'promotion' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_OFFERING
+    vendor_field: OFFERING_KEY
+    canonical_table: subscriber_product
+    canonical_field: offering_id
+    transformation: "CAST(OFFERING_KEY AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: CBS_OFFERING
+    vendor_field: OFFERING_NAME
+    canonical_table: subscriber_product
+    canonical_field: offering_name
+    transformation: "TRIM(OFFERING_NAME)"
+    confidence: 0.95
+
+  - vendor_table: CBS_OFFERING
+    vendor_field: EFF_DATE
+    canonical_table: subscriber_product
+    canonical_field: effective_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', EFF_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_OFFERING
+    vendor_field: EXP_DATE
+    canonical_table: subscriber_product
+    canonical_field: expiry_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', EXP_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_OFFERING
+    vendor_field: OFFERING_STATUS
+    canonical_table: subscriber_product
+    canonical_field: product_status
+    transformation: "CASE OFFERING_STATUS WHEN 1 THEN 'active' WHEN 2 THEN 'expired' WHEN 3 THEN 'cancelled' ELSE 'unknown' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_OFFERING
+    vendor_field: RECURRING_AMT
+    canonical_table: subscriber_product
+    canonical_field: recurring_charge
+    transformation: "CAST(RECURRING_AMT AS NUMERIC) / 100"
+    confidence: 0.88
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: DEALER_CD
+    canonical_table: subscriber_profile
+    canonical_field: dealer_code
+    transformation: "TRIM(DEALER_CD)"
+    confidence: 0.85
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: REGION_CD
+    canonical_table: subscriber_profile
+    canonical_field: region
+    transformation: "TRIM(REGION_CD)"
+    confidence: 0.80
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: NATIONAL_ID
+    canonical_table: subscriber_profile
+    canonical_field: national_id
+    transformation: "TRIM(NATIONAL_ID)"
+    confidence: 0.85
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: DOB
+    canonical_table: subscriber_profile
+    canonical_field: date_of_birth
+    transformation: "PARSE_DATE('%Y%m%d', DOB)"
+    confidence: 0.88
+
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: GENDER_CD
+    canonical_table: subscriber_profile
+    canonical_field: gender
+    transformation: "CASE GENDER_CD WHEN 1 THEN 'male' WHEN 2 THEN 'female' ELSE 'unspecified' END"
+    confidence: 0.85
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: TAX_EXEMPT_FLAG
+    canonical_table: subscriber_profile
+    canonical_field: is_tax_exempt
+    transformation: "CASE TAX_EXEMPT_FLAG WHEN 1 THEN TRUE ELSE FALSE END"
+    confidence: 0.90
+
+  - vendor_table: CBS_ACCOUNT
+    vendor_field: SEGMENT_CD
+    canonical_table: subscriber_profile
+    canonical_field: customer_segment
+    transformation: "CASE SEGMENT_CD WHEN 1 THEN 'consumer' WHEN 2 THEN 'business' WHEN 3 THEN 'enterprise' WHEN 4 THEN 'government' ELSE 'consumer' END"
     confidence: 0.85

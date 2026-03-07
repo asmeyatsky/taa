@@ -1,27 +1,323 @@
 vendor: ericsson_bscs
 domain: subscriber
 mappings:
+  # --- CONTRACT_ALL: Core subscriber/contract identity ---
   - vendor_table: CONTRACT_ALL
     vendor_field: CO_ID
     canonical_table: subscriber_profile
     canonical_field: subscriber_id
     transformation: "CAST(CO_ID AS STRING)"
-    confidence: 0.90
-  - vendor_table: DIRECTORY_NUMBER
-    vendor_field: DN_NUM
+    confidence: 0.98
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_CODE
     canonical_table: subscriber_profile
-    canonical_field: msisdn
-    transformation: ""
-    confidence: 0.90
-  - vendor_table: CUSTOMER_ALL
-    vendor_field: CUSTCODE
+    canonical_field: contract_code
+    transformation: "TRIM(CO_CODE)"
+    confidence: 0.95
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CUSTOMER_ID
     canonical_table: subscriber_profile
-    canonical_field: national_id
-    transformation: ""
-    confidence: 0.70
+    canonical_field: customer_id
+    transformation: "CAST(CUSTOMER_ID AS STRING)"
+    confidence: 0.97
+
   - vendor_table: CONTRACT_ALL
     vendor_field: CO_ACTIVATED
     canonical_table: subscriber_profile
     canonical_field: activation_date
-    transformation: "DATE(CO_ACTIVATED)"
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(CO_ACTIVATED AS STRING))"
+    confidence: 0.95
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_DEACTIVATED
+    canonical_table: subscriber_profile
+    canonical_field: deactivation_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(CO_DEACTIVATED AS STRING))"
+    confidence: 0.95
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_STATUS
+    canonical_table: subscriber_profile
+    canonical_field: status
+    transformation: "CASE CO_STATUS WHEN 'a' THEN 'active' WHEN 's' THEN 'suspended' WHEN 'd' THEN 'deactivated' WHEN 'o' THEN 'onhold' WHEN 'r' THEN 'reserved' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CH_STATUS
+    canonical_table: subscriber_profile
+    canonical_field: change_status
+    transformation: "TRIM(CH_STATUS)"
+    confidence: 0.70
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: TMCODE
+    canonical_table: subscriber_profile
+    canonical_field: tariff_model_id
+    transformation: "CAST(TMCODE AS STRING)"
     confidence: 0.90
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_EXPIR_DATE
+    canonical_table: subscriber_profile
+    canonical_field: expiry_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(CO_EXPIR_DATE AS STRING))"
+    confidence: 0.93
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_MODDATE
+    canonical_table: subscriber_profile
+    canonical_field: last_modified_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(CO_MODDATE AS STRING))"
+    confidence: 0.95
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_SIGN_DATE
+    canonical_table: subscriber_profile
+    canonical_field: contract_sign_date
+    transformation: "PARSE_DATE('%Y%m%d', CAST(CO_SIGN_DATE AS STRING))"
+    confidence: 0.93
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: PLCODE
+    canonical_table: subscriber_profile
+    canonical_field: price_list_code
+    transformation: "CAST(PLCODE AS STRING)"
+    confidence: 0.85
+
+  - vendor_table: CONTRACT_ALL
+    vendor_field: SCCODE
+    canonical_table: subscriber_profile
+    canonical_field: service_class_code
+    transformation: "CAST(SCCODE AS STRING)"
+    confidence: 0.85
+
+  # --- DIRECTORY_NUMBER: MSISDN / Number assignments ---
+  - vendor_table: DIRECTORY_NUMBER
+    vendor_field: DN_NUM
+    canonical_table: subscriber_profile
+    canonical_field: msisdn
+    transformation: "TRIM(DN_NUM)"
+    confidence: 0.97
+
+  - vendor_table: DIRECTORY_NUMBER
+    vendor_field: DN_ID
+    canonical_table: subscriber_profile
+    canonical_field: directory_number_id
+    transformation: "CAST(DN_ID AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: DIRECTORY_NUMBER
+    vendor_field: DN_STATUS
+    canonical_table: subscriber_profile
+    canonical_field: number_status
+    transformation: "CASE DN_STATUS WHEN 'a' THEN 'assigned' WHEN 'r' THEN 'reserved' WHEN 'f' THEN 'free' WHEN 'q' THEN 'quarantine' ELSE 'unknown' END"
+    confidence: 0.88
+
+  - vendor_table: DIRECTORY_NUMBER
+    vendor_field: DN_DEALER_ID
+    canonical_table: subscriber_profile
+    canonical_field: dealer_code
+    transformation: "CAST(DN_DEALER_ID AS STRING)"
+    confidence: 0.78
+
+  # --- CUSTOMER_ALL: Customer demographics ---
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: CUSTCODE
+    canonical_table: subscriber_profile
+    canonical_field: customer_code
+    transformation: "TRIM(CUSTCODE)"
+    confidence: 0.97
+
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: CUSTOMER_ID
+    canonical_table: subscriber_profile
+    canonical_field: customer_id
+    transformation: "CAST(CUSTOMER_ID AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: CSTYPE
+    canonical_table: subscriber_profile
+    canonical_field: subscriber_type
+    transformation: "CASE CSTYPE WHEN 'a' THEN 'consumer' WHEN 'b' THEN 'business' WHEN 'l' THEN 'large_account' ELSE 'consumer' END"
+    confidence: 0.85
+
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: CSLEVEL
+    canonical_table: subscriber_profile
+    canonical_field: customer_level
+    transformation: "CASE CSLEVEL WHEN 'G' THEN 'gold' WHEN 'S' THEN 'silver' WHEN 'B' THEN 'bronze' WHEN 'P' THEN 'platinum' ELSE 'standard' END"
+    confidence: 0.80
+
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: PRGCODE
+    canonical_table: subscriber_profile
+    canonical_field: price_group_code
+    transformation: "TRIM(PRGCODE)"
+    confidence: 0.75
+
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: CSACTIVATED
+    canonical_table: subscriber_profile
+    canonical_field: customer_activation_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(CSACTIVATED AS STRING))"
+    confidence: 0.90
+
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: CSDEACTIVATED
+    canonical_table: subscriber_profile
+    canonical_field: customer_deactivation_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(CSDEACTIVATED AS STRING))"
+    confidence: 0.90
+
+  # --- ADDRESS_ALL: Address and contact details ---
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_FNAME
+    canonical_table: subscriber_profile
+    canonical_field: first_name
+    transformation: "TRIM(ADR_FNAME)"
+    confidence: 0.97
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_LNAME
+    canonical_table: subscriber_profile
+    canonical_field: last_name
+    transformation: "TRIM(ADR_LNAME)"
+    confidence: 0.97
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_NAME
+    canonical_table: subscriber_profile
+    canonical_field: full_name
+    transformation: "TRIM(ADR_NAME)"
+    confidence: 0.85
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_STREET
+    canonical_table: subscriber_address
+    canonical_field: address_line_1
+    transformation: "TRIM(ADR_STREET)"
+    confidence: 0.95
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_STREETNO
+    canonical_table: subscriber_address
+    canonical_field: street_number
+    transformation: "TRIM(ADR_STREETNO)"
+    confidence: 0.95
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_CITY
+    canonical_table: subscriber_address
+    canonical_field: city
+    transformation: "TRIM(ADR_CITY)"
+    confidence: 0.98
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_STATE
+    canonical_table: subscriber_address
+    canonical_field: state
+    transformation: "TRIM(ADR_STATE)"
+    confidence: 0.97
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_ZIP
+    canonical_table: subscriber_address
+    canonical_field: postal_code
+    transformation: "TRIM(ADR_ZIP)"
+    confidence: 0.97
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_COUNTY
+    canonical_table: subscriber_address
+    canonical_field: country_code
+    transformation: "TRIM(ADR_COUNTY)"
+    confidence: 0.88
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_EMAIL
+    canonical_table: subscriber_profile
+    canonical_field: email
+    transformation: "LOWER(TRIM(ADR_EMAIL))"
+    confidence: 0.95
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_PHN1
+    canonical_table: subscriber_profile
+    canonical_field: contact_phone
+    transformation: "TRIM(ADR_PHN1)"
+    confidence: 0.90
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_IDNO
+    canonical_table: subscriber_profile
+    canonical_field: national_id
+    transformation: "TRIM(ADR_IDNO)"
+    confidence: 0.85
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_BIRTHDT
+    canonical_table: subscriber_profile
+    canonical_field: date_of_birth
+    transformation: "PARSE_DATE('%Y%m%d', CAST(ADR_BIRTHDT AS STRING))"
+    confidence: 0.90
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_SEX
+    canonical_table: subscriber_profile
+    canonical_field: gender
+    transformation: "CASE ADR_SEX WHEN 'M' THEN 'male' WHEN 'F' THEN 'female' ELSE 'unspecified' END"
+    confidence: 0.90
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_NATIONALITY
+    canonical_table: subscriber_profile
+    canonical_field: nationality
+    transformation: "TRIM(ADR_NATIONALITY)"
+    confidence: 0.85
+
+  - vendor_table: ADDRESS_ALL
+    vendor_field: ADR_COMPNO
+    canonical_table: subscriber_profile
+    canonical_field: company_registration_number
+    transformation: "TRIM(ADR_COMPNO)"
+    confidence: 0.80
+
+  # --- RATEPLAN: Tariff/rate plan ---
+  - vendor_table: RATEPLAN
+    vendor_field: TMCODE
+    canonical_table: subscriber_product
+    canonical_field: tariff_model_id
+    transformation: "CAST(TMCODE AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: RATEPLAN
+    vendor_field: DES
+    canonical_table: subscriber_product
+    canonical_field: product_name
+    transformation: "TRIM(DES)"
+    confidence: 0.90
+
+  - vendor_table: RATEPLAN
+    vendor_field: SHDES
+    canonical_table: subscriber_product
+    canonical_field: product_short_name
+    transformation: "TRIM(SHDES)"
+    confidence: 0.88
+
+  # --- BILLCYCLE_ASSIGNMENT: Billing cycle ---
+  - vendor_table: BILLCYCLE_ASSIGNMENT
+    vendor_field: BILLCYCLE
+    canonical_table: subscriber_profile
+    canonical_field: bill_cycle_id
+    transformation: "TRIM(BILLCYCLE)"
+    confidence: 0.95
+
+  - vendor_table: BILLCYCLE_ASSIGNMENT
+    vendor_field: CUSTOMER_ID
+    canonical_table: subscriber_profile
+    canonical_field: customer_id
+    transformation: "CAST(CUSTOMER_ID AS STRING)"
+    confidence: 0.97

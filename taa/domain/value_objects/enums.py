@@ -76,3 +76,10 @@ class TemplateType(str, Enum):
     NETWORK_QUALITY = "network_quality"
     ARPU_ANALYSIS = "arpu_analysis"
     INTERCONNECT_SETTLEMENT = "interconnect_settlement"
+
+
+class CloudProvider(str, Enum):
+    """Supported cloud providers."""
+    GCP = "gcp"
+    AWS = "aws"
+    AZURE = "azure"

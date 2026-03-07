@@ -16,3 +16,17 @@ rules:
     encryption_required: true
     kms_rotation_days: 30
     retention_months: 60
+  - rule_id: IN-DPDP-003
+    description: "TRAI regulations require CDR and subscriber data retention for lawful interception"
+    applicable_pii_categories: [msisdn, imsi, imei, ip_address, location]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 24
+  - rule_id: IN-DPDP-004
+    description: "DoT (Department of Telecommunications) mandates subscriber verification records be retained domestically"
+    applicable_pii_categories: [msisdn, imsi, national_id, name, address, date_of_birth]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 36

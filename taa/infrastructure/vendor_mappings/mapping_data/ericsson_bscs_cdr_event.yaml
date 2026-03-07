@@ -1,0 +1,222 @@
+vendor: ericsson_bscs
+domain: cdr_event
+mappings:
+  # --- RATED_FLAT_FILE (UDR_ALL): Voice/usage CDR records ---
+  - vendor_table: UDR_ALL
+    vendor_field: UDR_ID
+    canonical_table: voice_cdr
+    canonical_field: cdr_id
+    transformation: "CAST(UDR_ID AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: UDR_ALL
+    vendor_field: CO_ID
+    canonical_table: voice_cdr
+    canonical_field: subscriber_id
+    transformation: "CAST(CO_ID AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: UDR_ALL
+    vendor_field: DN_NUM
+    canonical_table: voice_cdr
+    canonical_field: msisdn
+    transformation: "TRIM(DN_NUM)"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: A_NUM
+    canonical_table: voice_cdr
+    canonical_field: calling_number
+    transformation: "TRIM(A_NUM)"
+    confidence: 0.97
+
+  - vendor_table: UDR_ALL
+    vendor_field: B_NUM
+    canonical_table: voice_cdr
+    canonical_field: called_number
+    transformation: "TRIM(B_NUM)"
+    confidence: 0.97
+
+  - vendor_table: UDR_ALL
+    vendor_field: ENTRY_DATE
+    canonical_table: voice_cdr
+    canonical_field: event_start_time
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(ENTRY_DATE AS STRING))"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: ENTRY_DATE
+    canonical_table: voice_cdr
+    canonical_field: event_date
+    transformation: "PARSE_DATE('%Y%m%d', SUBSTR(CAST(ENTRY_DATE AS STRING), 1, 8))"
+    confidence: 0.92
+
+  - vendor_table: UDR_ALL
+    vendor_field: DURATION
+    canonical_table: voice_cdr
+    canonical_field: duration_seconds
+    transformation: "CAST(DURATION AS INT64)"
+    confidence: 0.97
+
+  - vendor_table: UDR_ALL
+    vendor_field: ROUNDED_DURATION
+    canonical_table: voice_cdr
+    canonical_field: rated_duration_seconds
+    transformation: "CAST(ROUNDED_DURATION AS INT64)"
+    confidence: 0.90
+
+  - vendor_table: UDR_ALL
+    vendor_field: RATED_FLAT_AMT
+    canonical_table: voice_cdr
+    canonical_field: rated_amount
+    transformation: "CAST(RATED_FLAT_AMT AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: DISCOUNT_AMT
+    canonical_table: voice_cdr
+    canonical_field: discount_amount
+    transformation: "CAST(DISCOUNT_AMT AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: UDR_ALL
+    vendor_field: TAX_AMT
+    canonical_table: voice_cdr
+    canonical_field: tax_amount
+    transformation: "CAST(TAX_AMT AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: UDR_ALL
+    vendor_field: CALL_TYPE
+    canonical_table: voice_cdr
+    canonical_field: call_type
+    transformation: "CASE CALL_TYPE WHEN 1 THEN 'local' WHEN 2 THEN 'national' WHEN 3 THEN 'international' WHEN 4 THEN 'premium' WHEN 5 THEN 'toll_free' ELSE 'other' END"
+    confidence: 0.88
+
+  - vendor_table: UDR_ALL
+    vendor_field: DIR_IND
+    canonical_table: voice_cdr
+    canonical_field: direction
+    transformation: "CASE DIR_IND WHEN 'O' THEN 'originating' WHEN 'T' THEN 'terminating' WHEN 'F' THEN 'forwarding' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: SNCODE
+    canonical_table: voice_cdr
+    canonical_field: service_type
+    transformation: "CASE SNCODE WHEN 1 THEN 'voice' WHEN 2 THEN 'sms' WHEN 3 THEN 'data' WHEN 4 THEN 'mms' WHEN 5 THEN 'vas' ELSE 'other' END"
+    confidence: 0.85
+
+  - vendor_table: UDR_ALL
+    vendor_field: TMCODE
+    canonical_table: voice_cdr
+    canonical_field: tariff_model_id
+    transformation: "CAST(TMCODE AS STRING)"
+    confidence: 0.90
+
+  - vendor_table: UDR_ALL
+    vendor_field: ROAM_IND
+    canonical_table: voice_cdr
+    canonical_field: is_roaming
+    transformation: "CASE ROAM_IND WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE ELSE FALSE END"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: VISIT_PLMN
+    canonical_table: voice_cdr
+    canonical_field: roaming_network
+    transformation: "TRIM(VISIT_PLMN)"
+    confidence: 0.85
+
+  - vendor_table: UDR_ALL
+    vendor_field: CELL_ID
+    canonical_table: voice_cdr
+    canonical_field: cell_id
+    transformation: "TRIM(CELL_ID)"
+    confidence: 0.90
+
+  - vendor_table: UDR_ALL
+    vendor_field: IMSI
+    canonical_table: voice_cdr
+    canonical_field: imsi
+    transformation: "TRIM(IMSI)"
+    confidence: 0.97
+
+  - vendor_table: UDR_ALL
+    vendor_field: IMEI
+    canonical_table: voice_cdr
+    canonical_field: imei
+    transformation: "TRIM(IMEI)"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: RESULT_CD
+    canonical_table: voice_cdr
+    canonical_field: result_code
+    transformation: "CASE RESULT_CD WHEN 0 THEN 'success' WHEN 1 THEN 'busy' WHEN 2 THEN 'no_answer' WHEN 3 THEN 'failed' ELSE 'unknown' END"
+    confidence: 0.85
+
+  # --- MPULKTGR: Rating/charging group ---
+  - vendor_table: MPULKTGR
+    vendor_field: ZPCODE
+    canonical_table: voice_cdr
+    canonical_field: zone_code
+    transformation: "CAST(ZPCODE AS STRING)"
+    confidence: 0.82
+
+  - vendor_table: MPULKTGR
+    vendor_field: VSCODE
+    canonical_table: voice_cdr
+    canonical_field: value_added_service_code
+    transformation: "CAST(VSCODE AS STRING)"
+    confidence: 0.78
+
+  - vendor_table: MPULKTGR
+    vendor_field: TTCODE
+    canonical_table: voice_cdr
+    canonical_field: tariff_time_code
+    transformation: "CAST(TTCODE AS STRING)"
+    confidence: 0.80
+
+  # --- Data usage specific ---
+  - vendor_table: UDR_ALL
+    vendor_field: VOLUME_UPLINK
+    canonical_table: data_cdr
+    canonical_field: upload_bytes
+    transformation: "CAST(VOLUME_UPLINK AS INT64)"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: VOLUME_DOWNLINK
+    canonical_table: data_cdr
+    canonical_field: download_bytes
+    transformation: "CAST(VOLUME_DOWNLINK AS INT64)"
+    confidence: 0.95
+
+  - vendor_table: UDR_ALL
+    vendor_field: APN
+    canonical_table: data_cdr
+    canonical_field: access_point_name
+    transformation: "TRIM(APN)"
+    confidence: 0.92
+
+  - vendor_table: UDR_ALL
+    vendor_field: RAT_TYPE
+    canonical_table: data_cdr
+    canonical_field: radio_access_type
+    transformation: "CASE RAT_TYPE WHEN 1 THEN '2G' WHEN 2 THEN '3G' WHEN 3 THEN '4G' WHEN 6 THEN '5G' ELSE 'unknown' END"
+    confidence: 0.85
+
+  - vendor_table: UDR_ALL
+    vendor_field: CURRENCY_CD
+    canonical_table: voice_cdr
+    canonical_field: currency_code
+    transformation: "CASE CURRENCY_CD WHEN 1 THEN 'USD' WHEN 2 THEN 'EUR' WHEN 3 THEN 'GBP' ELSE CAST(CURRENCY_CD AS STRING) END"
+    confidence: 0.82
+
+  - vendor_table: UDR_ALL
+    vendor_field: RECORD_TYPE
+    canonical_table: voice_cdr
+    canonical_field: record_type
+    transformation: "CASE RECORD_TYPE WHEN 'N' THEN 'normal' WHEN 'P' THEN 'partial' WHEN 'C' THEN 'continuation' ELSE 'normal' END"
+    confidence: 0.80

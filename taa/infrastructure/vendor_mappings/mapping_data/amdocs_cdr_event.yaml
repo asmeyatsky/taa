@@ -1,6 +1,9 @@
 vendor: amdocs
 domain: cdr_event
 mappings:
+  # ============================================================
+  # voice_cdr mappings (from CDR_VOICE)
+  # ============================================================
   - vendor_table: CDR_VOICE
     vendor_field: CDR_SEQ_NO
     canonical_table: voice_cdr
@@ -20,10 +23,34 @@ mappings:
     transformation: ""
     confidence: 0.95
   - vendor_table: CDR_VOICE
+    vendor_field: A_PARTY_IMSI
+    canonical_table: voice_cdr
+    canonical_field: calling_imsi
+    transformation: ""
+    confidence: 0.90
+  - vendor_table: CDR_VOICE
+    vendor_field: B_PARTY_IMSI
+    canonical_table: voice_cdr
+    canonical_field: called_imsi
+    transformation: ""
+    confidence: 0.85
+  - vendor_table: CDR_VOICE
     vendor_field: CALL_START_DT
     canonical_table: voice_cdr
     canonical_field: event_date
     transformation: "DATE(CALL_START_DT)"
+    confidence: 0.95
+  - vendor_table: CDR_VOICE
+    vendor_field: CALL_START_DT
+    canonical_table: voice_cdr
+    canonical_field: event_timestamp
+    transformation: "TIMESTAMP(CALL_START_DT)"
+    confidence: 0.95
+  - vendor_table: CDR_VOICE
+    vendor_field: CALL_END_DT
+    canonical_table: voice_cdr
+    canonical_field: end_timestamp
+    transformation: "TIMESTAMP(CALL_END_DT)"
     confidence: 0.95
   - vendor_table: CDR_VOICE
     vendor_field: CALL_DURATION
@@ -35,5 +62,335 @@ mappings:
     vendor_field: RATED_AMT
     canonical_table: voice_cdr
     canonical_field: rated_amount
+    transformation: "CAST(RATED_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: CDR_VOICE
+    vendor_field: DISC_AMT
+    canonical_table: voice_cdr
+    canonical_field: discount_amount
+    transformation: "CAST(DISC_AMT AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: CDR_VOICE
+    vendor_field: TAX_AMT
+    canonical_table: voice_cdr
+    canonical_field: tax_amount
+    transformation: "CAST(TAX_AMT AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: CDR_VOICE
+    vendor_field: CALL_DIR_CD
+    canonical_table: voice_cdr
+    canonical_field: call_direction
+    transformation: "CASE CALL_DIR_CD WHEN 'MO' THEN 'outgoing' WHEN 'MT' THEN 'incoming' WHEN 'FW' THEN 'forwarded' END"
+    confidence: 0.90
+  - vendor_table: CDR_VOICE
+    vendor_field: CALL_TYPE_CD
+    canonical_table: voice_cdr
+    canonical_field: call_type
+    transformation: "CASE CALL_TYPE_CD WHEN 'LOC' THEN 'local' WHEN 'STD' THEN 'national' WHEN 'ISD' THEN 'international' WHEN 'ONT' THEN 'on_net' WHEN 'OFT' THEN 'off_net' WHEN 'EMG' THEN 'emergency' END"
+    confidence: 0.85
+  - vendor_table: CDR_VOICE
+    vendor_field: TERM_REASON_CD
+    canonical_table: voice_cdr
+    canonical_field: termination_reason
+    transformation: "CASE TERM_REASON_CD WHEN 'N' THEN 'normal' WHEN 'B' THEN 'busy' WHEN 'F' THEN 'failed' WHEN 'T' THEN 'timeout' WHEN 'U' THEN 'unanswered' END"
+    confidence: 0.80
+  - vendor_table: CDR_VOICE
+    vendor_field: ORIG_CELL_ID
+    canonical_table: voice_cdr
+    canonical_field: originating_cell_id
+    transformation: "TRIM(ORIG_CELL_ID)"
+    confidence: 0.85
+  - vendor_table: CDR_VOICE
+    vendor_field: TERM_CELL_ID
+    canonical_table: voice_cdr
+    canonical_field: terminating_cell_id
+    transformation: "TRIM(TERM_CELL_ID)"
+    confidence: 0.85
+  - vendor_table: CDR_VOICE
+    vendor_field: RATE_PLAN_ID
+    canonical_table: voice_cdr
+    canonical_field: rate_plan_id
+    transformation: "CAST(RATE_PLAN_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: CDR_VOICE
+    vendor_field: ROAMING_FLG
+    canonical_table: voice_cdr
+    canonical_field: is_roaming
+    transformation: "CASE ROAMING_FLG WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE END"
+    confidence: 0.90
+  - vendor_table: CDR_VOICE
+    vendor_field: VISIT_PLMN_ID
+    canonical_table: voice_cdr
+    canonical_field: visited_network
+    transformation: "TRIM(VISIT_PLMN_ID)"
+    confidence: 0.80
+
+  # ============================================================
+  # data_cdr mappings (from CDR_DATA)
+  # ============================================================
+  - vendor_table: CDR_DATA
+    vendor_field: DATA_CDR_SEQ
+    canonical_table: data_cdr
+    canonical_field: cdr_id
+    transformation: "CAST(DATA_CDR_SEQ AS STRING)"
+    confidence: 0.99
+  - vendor_table: CDR_DATA
+    vendor_field: MSISDN
+    canonical_table: data_cdr
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.99
+  - vendor_table: CDR_DATA
+    vendor_field: IMSI_NUM
+    canonical_table: data_cdr
+    canonical_field: imsi
     transformation: ""
     confidence: 0.95
+  - vendor_table: CDR_DATA
+    vendor_field: SESSION_START_DT
+    canonical_table: data_cdr
+    canonical_field: event_timestamp
+    transformation: "TIMESTAMP(SESSION_START_DT)"
+    confidence: 0.95
+  - vendor_table: CDR_DATA
+    vendor_field: SESSION_END_DT
+    canonical_table: data_cdr
+    canonical_field: end_timestamp
+    transformation: "TIMESTAMP(SESSION_END_DT)"
+    confidence: 0.95
+  - vendor_table: CDR_DATA
+    vendor_field: UPLOAD_BYTES
+    canonical_table: data_cdr
+    canonical_field: upload_bytes
+    transformation: "CAST(UPLOAD_BYTES AS INT64)"
+    confidence: 0.95
+  - vendor_table: CDR_DATA
+    vendor_field: DOWNLOAD_BYTES
+    canonical_table: data_cdr
+    canonical_field: download_bytes
+    transformation: "CAST(DOWNLOAD_BYTES AS INT64)"
+    confidence: 0.95
+  - vendor_table: CDR_DATA
+    vendor_field: TOTAL_BYTES
+    canonical_table: data_cdr
+    canonical_field: total_bytes
+    transformation: "COALESCE(CAST(TOTAL_BYTES AS INT64), CAST(UPLOAD_BYTES AS INT64) + CAST(DOWNLOAD_BYTES AS INT64))"
+    confidence: 0.90
+  - vendor_table: CDR_DATA
+    vendor_field: RATED_AMT
+    canonical_table: data_cdr
+    canonical_field: rated_amount
+    transformation: "CAST(RATED_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: CDR_DATA
+    vendor_field: APN_NM
+    canonical_table: data_cdr
+    canonical_field: apn
+    transformation: "LOWER(TRIM(APN_NM))"
+    confidence: 0.90
+  - vendor_table: CDR_DATA
+    vendor_field: RAT_TYPE_CD
+    canonical_table: data_cdr
+    canonical_field: radio_access_type
+    transformation: "CASE RAT_TYPE_CD WHEN '1' THEN '2g' WHEN '2' THEN '3g' WHEN '6' THEN '4g_lte' WHEN '10' THEN '5g_nr' WHEN '11' THEN '5g_nsa' END"
+    confidence: 0.85
+  - vendor_table: CDR_DATA
+    vendor_field: SGSN_ADDR
+    canonical_table: data_cdr
+    canonical_field: sgsn_address
+    transformation: "TRIM(SGSN_ADDR)"
+    confidence: 0.80
+  - vendor_table: CDR_DATA
+    vendor_field: GGSN_ADDR
+    canonical_table: data_cdr
+    canonical_field: ggsn_address
+    transformation: "TRIM(GGSN_ADDR)"
+    confidence: 0.80
+  - vendor_table: CDR_DATA
+    vendor_field: QOS_CLASS
+    canonical_table: data_cdr
+    canonical_field: qos_class
+    transformation: "CAST(QOS_CLASS AS INT64)"
+    confidence: 0.80
+
+  # ============================================================
+  # sms_cdr mappings (from CDR_SMS)
+  # ============================================================
+  - vendor_table: CDR_SMS
+    vendor_field: SMS_CDR_SEQ
+    canonical_table: sms_cdr
+    canonical_field: cdr_id
+    transformation: "CAST(SMS_CDR_SEQ AS STRING)"
+    confidence: 0.99
+  - vendor_table: CDR_SMS
+    vendor_field: ORIG_MSISDN
+    canonical_table: sms_cdr
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: CDR_SMS
+    vendor_field: DEST_MSISDN
+    canonical_table: sms_cdr
+    canonical_field: destination_number
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: CDR_SMS
+    vendor_field: SUBMIT_DT
+    canonical_table: sms_cdr
+    canonical_field: event_timestamp
+    transformation: "TIMESTAMP(SUBMIT_DT)"
+    confidence: 0.95
+  - vendor_table: CDR_SMS
+    vendor_field: DELIVERY_DT
+    canonical_table: sms_cdr
+    canonical_field: delivery_timestamp
+    transformation: "TIMESTAMP(DELIVERY_DT)"
+    confidence: 0.90
+  - vendor_table: CDR_SMS
+    vendor_field: MSG_TYPE_CD
+    canonical_table: sms_cdr
+    canonical_field: message_type
+    transformation: "CASE MSG_TYPE_CD WHEN 'SM' THEN 'sms' WHEN 'MM' THEN 'mms' WHEN 'RCS' THEN 'rcs' END"
+    confidence: 0.90
+  - vendor_table: CDR_SMS
+    vendor_field: MSG_DIR_CD
+    canonical_table: sms_cdr
+    canonical_field: direction
+    transformation: "CASE MSG_DIR_CD WHEN 'MO' THEN 'outgoing' WHEN 'MT' THEN 'incoming' END"
+    confidence: 0.90
+  - vendor_table: CDR_SMS
+    vendor_field: DELIVERY_STATUS
+    canonical_table: sms_cdr
+    canonical_field: delivery_status
+    transformation: "CASE DELIVERY_STATUS WHEN 'D' THEN 'delivered' WHEN 'F' THEN 'failed' WHEN 'P' THEN 'pending' WHEN 'E' THEN 'expired' END"
+    confidence: 0.85
+  - vendor_table: CDR_SMS
+    vendor_field: RATED_AMT
+    canonical_table: sms_cdr
+    canonical_field: rated_amount
+    transformation: "CAST(RATED_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: CDR_SMS
+    vendor_field: MSG_PARTS
+    canonical_table: sms_cdr
+    canonical_field: segment_count
+    transformation: "CAST(MSG_PARTS AS INT64)"
+    confidence: 0.85
+
+  # ============================================================
+  # 5g_nr_event mappings (from CDR_5G_NR, CDR_VOLTE)
+  # ============================================================
+  - vendor_table: CDR_5G_NR
+    vendor_field: NR_CDR_SEQ
+    canonical_table: 5g_nr_event
+    canonical_field: event_id
+    transformation: "CAST(NR_CDR_SEQ AS STRING)"
+    confidence: 0.99
+  - vendor_table: CDR_5G_NR
+    vendor_field: SUPI
+    canonical_table: 5g_nr_event
+    canonical_field: supi
+    transformation: "TRIM(SUPI)"
+    confidence: 0.95
+  - vendor_table: CDR_5G_NR
+    vendor_field: PEI
+    canonical_table: 5g_nr_event
+    canonical_field: pei
+    transformation: "TRIM(PEI)"
+    confidence: 0.90
+  - vendor_table: CDR_5G_NR
+    vendor_field: GPSI
+    canonical_table: 5g_nr_event
+    canonical_field: msisdn
+    transformation: "REGEXP_REPLACE(GPSI, '^msisdn-', '')"
+    confidence: 0.85
+  - vendor_table: CDR_5G_NR
+    vendor_field: PDU_SESSION_ID
+    canonical_table: 5g_nr_event
+    canonical_field: session_id
+    transformation: "CAST(PDU_SESSION_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: CDR_5G_NR
+    vendor_field: SST
+    canonical_table: 5g_nr_event
+    canonical_field: slice_service_type
+    transformation: "CAST(SST AS INT64)"
+    confidence: 0.90
+  - vendor_table: CDR_5G_NR
+    vendor_field: SD
+    canonical_table: 5g_nr_event
+    canonical_field: slice_differentiator
+    transformation: "TRIM(SD)"
+    confidence: 0.85
+  - vendor_table: CDR_5G_NR
+    vendor_field: DNN
+    canonical_table: 5g_nr_event
+    canonical_field: data_network_name
+    transformation: "LOWER(TRIM(DNN))"
+    confidence: 0.90
+  - vendor_table: CDR_5G_NR
+    vendor_field: QFI
+    canonical_table: 5g_nr_event
+    canonical_field: qos_flow_id
+    transformation: "CAST(QFI AS INT64)"
+    confidence: 0.85
+  - vendor_table: CDR_5G_NR
+    vendor_field: SESSION_START_DT
+    canonical_table: 5g_nr_event
+    canonical_field: event_timestamp
+    transformation: "TIMESTAMP(SESSION_START_DT)"
+    confidence: 0.95
+  - vendor_table: CDR_5G_NR
+    vendor_field: UL_VOL_BYTES
+    canonical_table: 5g_nr_event
+    canonical_field: upload_bytes
+    transformation: "CAST(UL_VOL_BYTES AS INT64)"
+    confidence: 0.95
+  - vendor_table: CDR_5G_NR
+    vendor_field: DL_VOL_BYTES
+    canonical_table: 5g_nr_event
+    canonical_field: download_bytes
+    transformation: "CAST(DL_VOL_BYTES AS INT64)"
+    confidence: 0.95
+  - vendor_table: CDR_5G_NR
+    vendor_field: RATED_AMT
+    canonical_table: 5g_nr_event
+    canonical_field: rated_amount
+    transformation: "CAST(RATED_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: CDR_VOLTE
+    vendor_field: VOLTE_CDR_SEQ
+    canonical_table: 5g_nr_event
+    canonical_field: volte_event_id
+    transformation: "CAST(VOLTE_CDR_SEQ AS STRING)"
+    confidence: 0.90
+  - vendor_table: CDR_VOLTE
+    vendor_field: ORIG_PARTY
+    canonical_table: 5g_nr_event
+    canonical_field: calling_party
+    transformation: ""
+    confidence: 0.90
+  - vendor_table: CDR_VOLTE
+    vendor_field: TERM_PARTY
+    canonical_table: 5g_nr_event
+    canonical_field: called_party
+    transformation: ""
+    confidence: 0.90
+  - vendor_table: CDR_VOLTE
+    vendor_field: CALL_DURATION_MS
+    canonical_table: 5g_nr_event
+    canonical_field: duration_seconds
+    transformation: "CAST(CALL_DURATION_MS AS FLOAT64) / 1000.0"
+    confidence: 0.90
+  - vendor_table: CDR_VOLTE
+    vendor_field: CODEC_TYPE
+    canonical_table: 5g_nr_event
+    canonical_field: codec
+    transformation: "CASE CODEC_TYPE WHEN 'AMR_NB' THEN 'amr_narrowband' WHEN 'AMR_WB' THEN 'amr_wideband' WHEN 'EVS' THEN 'enhanced_voice_services' END"
+    confidence: 0.80
+  - vendor_table: CDR_VOLTE
+    vendor_field: VIDEO_FLG
+    canonical_table: 5g_nr_event
+    canonical_field: is_video_call
+    transformation: "CASE VIDEO_FLG WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE END"
+    confidence: 0.85

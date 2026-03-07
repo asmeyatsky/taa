@@ -1,0 +1,32 @@
+jurisdiction: ZA
+framework: POPIA
+name: "South Africa Protection of Personal Information Act"
+rules:
+  - rule_id: ZA-POPIA-001
+    description: "Personal information must be processed lawfully with defined purpose"
+    applicable_pii_categories: [msisdn, imsi, imei, email, national_id, name, address, date_of_birth, ip_address, location]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 24
+  - rule_id: ZA-POPIA-002
+    description: "South African ID number and special personal information require enhanced safeguards"
+    applicable_pii_categories: [national_id]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 60
+  - rule_id: ZA-POPIA-003
+    description: "RICA Act requires retention of subscriber registration data"
+    applicable_pii_categories: [msisdn, imsi, name, national_id, address]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 60
+  - rule_id: ZA-POPIA-004
+    description: "Cross-border transfer requires adequate level of protection in recipient country"
+    applicable_pii_categories: [msisdn, imsi, email, national_id, name, address, date_of_birth]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 36

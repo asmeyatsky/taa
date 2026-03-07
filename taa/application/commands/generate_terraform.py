@@ -22,6 +22,9 @@ JURISDICTIONS: dict[str, Jurisdiction] = {
     "GB": Jurisdiction(code="GB", name="United Kingdom", primary_framework="GDPR_PECR", gcp_region="europe-west2", data_residency_required=False),
     "EU": Jurisdiction(code="EU", name="European Union", primary_framework="GDPR", gcp_region="europe-west1", data_residency_required=False),
     "IN": Jurisdiction(code="IN", name="India", primary_framework="DPDP", gcp_region="asia-south1", data_residency_required=True),
+    "TR": Jurisdiction(code="TR", name="Turkey", primary_framework="KVKK", gcp_region="europe-west1", data_residency_required=True),
+    "IE": Jurisdiction(code="IE", name="Ireland", primary_framework="GDPR_EPRIVACY", gcp_region="europe-west1", data_residency_required=False),
+    "ZA": Jurisdiction(code="ZA", name="South Africa", primary_framework="POPIA", gcp_region="africa-south1", data_residency_required=True),
 }
 
 

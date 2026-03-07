@@ -1,0 +1,292 @@
+vendor: amdocs
+domain: product_catalogue
+mappings:
+  # ============================================================
+  # product mappings (from PM_PRODUCT)
+  # ============================================================
+  - vendor_table: PM_PRODUCT
+    vendor_field: PROD_ID
+    canonical_table: product
+    canonical_field: product_id
+    transformation: "CAST(PROD_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: PM_PRODUCT
+    vendor_field: PROD_CD
+    canonical_table: product
+    canonical_field: product_code
+    transformation: "UPPER(TRIM(PROD_CD))"
+    confidence: 0.95
+  - vendor_table: PM_PRODUCT
+    vendor_field: PROD_NM
+    canonical_table: product
+    canonical_field: product_name
+    transformation: "TRIM(PROD_NM)"
+    confidence: 0.95
+  - vendor_table: PM_PRODUCT
+    vendor_field: PROD_DESC
+    canonical_table: product
+    canonical_field: description
+    transformation: "TRIM(PROD_DESC)"
+    confidence: 0.90
+  - vendor_table: PM_PRODUCT
+    vendor_field: PROD_TYPE_CD
+    canonical_table: product
+    canonical_field: product_type
+    transformation: "CASE PROD_TYPE_CD WHEN 'SVC' THEN 'service' WHEN 'HW' THEN 'hardware' WHEN 'ACC' THEN 'accessory' WHEN 'BDL' THEN 'bundle' WHEN 'ADD' THEN 'add_on' WHEN 'VAS' THEN 'value_added' END"
+    confidence: 0.90
+  - vendor_table: PM_PRODUCT
+    vendor_field: PROD_CATEGORY
+    canonical_table: product
+    canonical_field: category
+    transformation: "CASE PROD_CATEGORY WHEN 'MOB' THEN 'mobile' WHEN 'FIX' THEN 'fixed_line' WHEN 'BB' THEN 'broadband' WHEN 'TV' THEN 'television' WHEN 'IOT' THEN 'iot' WHEN 'ENT' THEN 'enterprise' END"
+    confidence: 0.85
+  - vendor_table: PM_PRODUCT
+    vendor_field: PROD_STATUS
+    canonical_table: product
+    canonical_field: status
+    transformation: "CASE PROD_STATUS WHEN 'A' THEN 'active' WHEN 'D' THEN 'deprecated' WHEN 'R' THEN 'retired' WHEN 'P' THEN 'pending_approval' END"
+    confidence: 0.90
+  - vendor_table: PM_PRODUCT
+    vendor_field: LAUNCH_DT
+    canonical_table: product
+    canonical_field: launch_date
+    transformation: "PARSE_DATE('%Y%m%d', LAUNCH_DT)"
+    confidence: 0.90
+  - vendor_table: PM_PRODUCT
+    vendor_field: RETIRE_DT
+    canonical_table: product
+    canonical_field: retirement_date
+    transformation: "PARSE_DATE('%Y%m%d', RETIRE_DT)"
+    confidence: 0.90
+  - vendor_table: PM_PRODUCT
+    vendor_field: IS_SELLABLE_FLG
+    canonical_table: product
+    canonical_field: is_sellable
+    transformation: "CASE IS_SELLABLE_FLG WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE END"
+    confidence: 0.85
+
+  # ============================================================
+  # offering mappings (from PM_OFFERING)
+  # ============================================================
+  - vendor_table: PM_OFFERING
+    vendor_field: OFFER_ID
+    canonical_table: offering
+    canonical_field: offering_id
+    transformation: "CAST(OFFER_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: PM_OFFERING
+    vendor_field: OFFER_CD
+    canonical_table: offering
+    canonical_field: offering_code
+    transformation: "UPPER(TRIM(OFFER_CD))"
+    confidence: 0.95
+  - vendor_table: PM_OFFERING
+    vendor_field: OFFER_NM
+    canonical_table: offering
+    canonical_field: offering_name
+    transformation: "TRIM(OFFER_NM)"
+    confidence: 0.95
+  - vendor_table: PM_OFFERING
+    vendor_field: OFFER_TYPE_CD
+    canonical_table: offering
+    canonical_field: offering_type
+    transformation: "CASE OFFER_TYPE_CD WHEN 'BASE' THEN 'base_plan' WHEN 'ADDON' THEN 'add_on' WHEN 'PROMO' THEN 'promotional' WHEN 'TRIAL' THEN 'trial' END"
+    confidence: 0.85
+  - vendor_table: PM_OFFERING
+    vendor_field: MKT_SEGMENT_CD
+    canonical_table: offering
+    canonical_field: target_segment
+    transformation: "CASE MKT_SEGMENT_CD WHEN 'CON' THEN 'consumer' WHEN 'ENT' THEN 'enterprise' WHEN 'SMB' THEN 'small_business' WHEN 'YTH' THEN 'youth' WHEN 'SEN' THEN 'senior' END"
+    confidence: 0.80
+  - vendor_table: PM_OFFERING
+    vendor_field: VALID_FROM_DT
+    canonical_table: offering
+    canonical_field: valid_from
+    transformation: "PARSE_DATE('%Y%m%d', VALID_FROM_DT)"
+    confidence: 0.90
+  - vendor_table: PM_OFFERING
+    vendor_field: VALID_TO_DT
+    canonical_table: offering
+    canonical_field: valid_to
+    transformation: "PARSE_DATE('%Y%m%d', VALID_TO_DT)"
+    confidence: 0.90
+  - vendor_table: PM_OFFERING
+    vendor_field: OFFER_STATUS
+    canonical_table: offering
+    canonical_field: status
+    transformation: "CASE OFFER_STATUS WHEN 'A' THEN 'active' WHEN 'I' THEN 'inactive' WHEN 'E' THEN 'expired' END"
+    confidence: 0.90
+
+  # ============================================================
+  # rate_plan mappings (from PM_RATE_PLAN)
+  # ============================================================
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: RP_ID
+    canonical_table: rate_plan
+    canonical_field: rate_plan_id
+    transformation: "CAST(RP_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: RP_CD
+    canonical_table: rate_plan
+    canonical_field: rate_plan_code
+    transformation: "UPPER(TRIM(RP_CD))"
+    confidence: 0.95
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: RP_NM
+    canonical_table: rate_plan
+    canonical_field: rate_plan_name
+    transformation: "TRIM(RP_NM)"
+    confidence: 0.95
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: MRC_AMT
+    canonical_table: rate_plan
+    canonical_field: monthly_charge
+    transformation: "CAST(MRC_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: DATA_ALLOWANCE_MB
+    canonical_table: rate_plan
+    canonical_field: data_allowance_mb
+    transformation: "CAST(DATA_ALLOWANCE_MB AS INT64)"
+    confidence: 0.90
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: VOICE_MINS_INCL
+    canonical_table: rate_plan
+    canonical_field: voice_minutes_included
+    transformation: "COALESCE(CAST(VOICE_MINS_INCL AS INT64), -1)"
+    confidence: 0.90
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: SMS_INCL
+    canonical_table: rate_plan
+    canonical_field: sms_included
+    transformation: "COALESCE(CAST(SMS_INCL AS INT64), -1)"
+    confidence: 0.90
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: OVERAGE_RATE
+    canonical_table: rate_plan
+    canonical_field: overage_rate_per_mb
+    transformation: "CAST(OVERAGE_RATE AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: CURRENCY_CD
+    canonical_table: rate_plan
+    canonical_field: currency_code
+    transformation: "UPPER(CURRENCY_CD)"
+    confidence: 0.95
+  - vendor_table: PM_RATE_PLAN
+    vendor_field: THROTTLE_SPEED_KBPS
+    canonical_table: rate_plan
+    canonical_field: throttle_speed_kbps
+    transformation: "CAST(THROTTLE_SPEED_KBPS AS INT64)"
+    confidence: 0.80
+
+  # ============================================================
+  # promotion mappings (from PM_PROMOTION)
+  # ============================================================
+  - vendor_table: PM_PROMOTION
+    vendor_field: PROMO_ID
+    canonical_table: promotion
+    canonical_field: promotion_id
+    transformation: "CAST(PROMO_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: PM_PROMOTION
+    vendor_field: PROMO_CD
+    canonical_table: promotion
+    canonical_field: promotion_code
+    transformation: "UPPER(TRIM(PROMO_CD))"
+    confidence: 0.95
+  - vendor_table: PM_PROMOTION
+    vendor_field: PROMO_NM
+    canonical_table: promotion
+    canonical_field: promotion_name
+    transformation: "TRIM(PROMO_NM)"
+    confidence: 0.95
+  - vendor_table: PM_PROMOTION
+    vendor_field: PROMO_TYPE_CD
+    canonical_table: promotion
+    canonical_field: promotion_type
+    transformation: "CASE PROMO_TYPE_CD WHEN 'DISC' THEN 'discount' WHEN 'BOGO' THEN 'buy_one_get_one' WHEN 'FREE' THEN 'free_trial' WHEN 'TOPUP' THEN 'bonus_topup' WHEN 'LOYAL' THEN 'loyalty_reward' END"
+    confidence: 0.85
+  - vendor_table: PM_PROMOTION
+    vendor_field: DISC_PCT
+    canonical_table: promotion
+    canonical_field: discount_percentage
+    transformation: "CAST(DISC_PCT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: PM_PROMOTION
+    vendor_field: DISC_AMT
+    canonical_table: promotion
+    canonical_field: discount_amount
+    transformation: "CAST(DISC_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: PM_PROMOTION
+    vendor_field: START_DT
+    canonical_table: promotion
+    canonical_field: start_date
+    transformation: "PARSE_DATE('%Y%m%d', START_DT)"
+    confidence: 0.95
+  - vendor_table: PM_PROMOTION
+    vendor_field: END_DT
+    canonical_table: promotion
+    canonical_field: end_date
+    transformation: "PARSE_DATE('%Y%m%d', END_DT)"
+    confidence: 0.95
+  - vendor_table: PM_PROMOTION
+    vendor_field: MAX_REDEMPTIONS
+    canonical_table: promotion
+    canonical_field: max_redemptions
+    transformation: "CAST(MAX_REDEMPTIONS AS INT64)"
+    confidence: 0.85
+  - vendor_table: PM_PROMOTION
+    vendor_field: PROMO_STATUS
+    canonical_table: promotion
+    canonical_field: status
+    transformation: "CASE PROMO_STATUS WHEN 'A' THEN 'active' WHEN 'S' THEN 'scheduled' WHEN 'E' THEN 'expired' WHEN 'C' THEN 'cancelled' END"
+    confidence: 0.90
+
+  # ============================================================
+  # bundle mappings (from PM_BUNDLE)
+  # ============================================================
+  - vendor_table: PM_BUNDLE
+    vendor_field: BUNDLE_ID
+    canonical_table: bundle
+    canonical_field: bundle_id
+    transformation: "CAST(BUNDLE_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: PM_BUNDLE
+    vendor_field: BUNDLE_CD
+    canonical_table: bundle
+    canonical_field: bundle_code
+    transformation: "UPPER(TRIM(BUNDLE_CD))"
+    confidence: 0.95
+  - vendor_table: PM_BUNDLE
+    vendor_field: BUNDLE_NM
+    canonical_table: bundle
+    canonical_field: bundle_name
+    transformation: "TRIM(BUNDLE_NM)"
+    confidence: 0.95
+  - vendor_table: PM_BUNDLE
+    vendor_field: BUNDLE_TYPE_CD
+    canonical_table: bundle
+    canonical_field: bundle_type
+    transformation: "CASE BUNDLE_TYPE_CD WHEN 'CONV' THEN 'convergent' WHEN 'MOB' THEN 'mobile_only' WHEN 'FMC' THEN 'fixed_mobile' WHEN 'FAM' THEN 'family' END"
+    confidence: 0.85
+  - vendor_table: PM_BUNDLE
+    vendor_field: INCL_PROD_CNT
+    canonical_table: bundle
+    canonical_field: included_product_count
+    transformation: "CAST(INCL_PROD_CNT AS INT64)"
+    confidence: 0.85
+  - vendor_table: PM_BUNDLE
+    vendor_field: BUNDLE_PRICE
+    canonical_table: bundle
+    canonical_field: bundle_price
+    transformation: "CAST(BUNDLE_PRICE AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: PM_BUNDLE
+    vendor_field: BUNDLE_STATUS
+    canonical_table: bundle
+    canonical_field: status
+    transformation: "CASE BUNDLE_STATUS WHEN 'A' THEN 'active' WHEN 'D' THEN 'deprecated' WHEN 'R' THEN 'retired' END"
+    confidence: 0.90

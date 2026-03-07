@@ -16,3 +16,17 @@ rules:
     encryption_required: true
     kms_rotation_days: 30
     retention_months: 60
+  - rule_id: AE-PDPL-003
+    description: "TRA (Telecommunications and Digital Government Regulatory Authority) requires CDR data retention within UAE"
+    applicable_pii_categories: [msisdn, imsi, ip_address, location]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 24
+  - rule_id: AE-PDPL-004
+    description: "TDRA regulations require subscriber identity verification data to be stored domestically"
+    applicable_pii_categories: [msisdn, imsi, national_id, name, address]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 36

@@ -1,0 +1,251 @@
+vendor: huawei_cbs
+domain: revenue_invoice
+mappings:
+  # --- CBS_BILL: Invoice / billing records ---
+  - vendor_table: CBS_BILL
+    vendor_field: BILL_NO
+    canonical_table: invoice
+    canonical_field: invoice_id
+    transformation: "CAST(BILL_NO AS STRING)"
+    confidence: 0.99
+
+  - vendor_table: CBS_BILL
+    vendor_field: ACCT_KEY
+    canonical_table: invoice
+    canonical_field: account_id
+    transformation: "CAST(ACCT_KEY AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: CBS_BILL
+    vendor_field: BILL_CYCLE_ID
+    canonical_table: invoice
+    canonical_field: bill_cycle_id
+    transformation: "CAST(BILL_CYCLE_ID AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: CBS_BILL
+    vendor_field: BILL_DATE
+    canonical_table: invoice
+    canonical_field: invoice_date
+    transformation: "PARSE_DATE('%Y%m%d', BILL_DATE)"
+    confidence: 0.97
+
+  - vendor_table: CBS_BILL
+    vendor_field: BILL_START_DATE
+    canonical_table: invoice
+    canonical_field: period_start_date
+    transformation: "PARSE_DATE('%Y%m%d', BILL_START_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_BILL
+    vendor_field: BILL_END_DATE
+    canonical_table: invoice
+    canonical_field: period_end_date
+    transformation: "PARSE_DATE('%Y%m%d', BILL_END_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_BILL
+    vendor_field: DUE_DATE
+    canonical_table: invoice
+    canonical_field: due_date
+    transformation: "PARSE_DATE('%Y%m%d', DUE_DATE)"
+    confidence: 0.97
+
+  - vendor_table: CBS_BILL
+    vendor_field: TOTAL_AMT
+    canonical_table: invoice
+    canonical_field: total_amount
+    transformation: "CAST(TOTAL_AMT AS NUMERIC) / 100"
+    confidence: 0.97
+
+  - vendor_table: CBS_BILL
+    vendor_field: TAX_AMT
+    canonical_table: invoice
+    canonical_field: tax_amount
+    transformation: "CAST(TAX_AMT AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: CBS_BILL
+    vendor_field: DISCOUNT_AMT
+    canonical_table: invoice
+    canonical_field: discount_amount
+    transformation: "CAST(DISCOUNT_AMT AS NUMERIC) / 100"
+    confidence: 0.93
+
+  - vendor_table: CBS_BILL
+    vendor_field: NET_AMT
+    canonical_table: invoice
+    canonical_field: net_amount
+    transformation: "CAST(NET_AMT AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: CBS_BILL
+    vendor_field: BILL_STATUS
+    canonical_table: invoice
+    canonical_field: invoice_status
+    transformation: "CASE BILL_STATUS WHEN 0 THEN 'draft' WHEN 1 THEN 'finalized' WHEN 2 THEN 'sent' WHEN 3 THEN 'paid' WHEN 4 THEN 'overdue' WHEN 5 THEN 'cancelled' ELSE 'unknown' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_BILL
+    vendor_field: CURRENCY_CD
+    canonical_table: invoice
+    canonical_field: currency_code
+    transformation: "CASE CURRENCY_CD WHEN 1 THEN 'USD' WHEN 2 THEN 'EUR' WHEN 3 THEN 'GBP' WHEN 4 THEN 'SAR' ELSE 'USD' END"
+    confidence: 0.85
+
+  - vendor_table: CBS_BILL
+    vendor_field: PAYMENT_METHOD
+    canonical_table: invoice
+    canonical_field: payment_method
+    transformation: "CASE PAYMENT_METHOD WHEN 1 THEN 'cash' WHEN 2 THEN 'credit_card' WHEN 3 THEN 'bank_transfer' WHEN 4 THEN 'direct_debit' ELSE 'other' END"
+    confidence: 0.88
+
+  # --- CBS_BILL_ITEM: Line items on invoices ---
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: ITEM_NO
+    canonical_table: invoice_line_item
+    canonical_field: line_item_id
+    transformation: "CAST(ITEM_NO AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: BILL_NO
+    canonical_table: invoice_line_item
+    canonical_field: invoice_id
+    transformation: "CAST(BILL_NO AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: ITEM_TYPE
+    canonical_table: invoice_line_item
+    canonical_field: charge_type
+    transformation: "CASE ITEM_TYPE WHEN 1 THEN 'recurring' WHEN 2 THEN 'usage' WHEN 3 THEN 'one_time' WHEN 4 THEN 'adjustment' WHEN 5 THEN 'penalty' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: ITEM_AMT
+    canonical_table: invoice_line_item
+    canonical_field: amount
+    transformation: "CAST(ITEM_AMT AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: ITEM_TAX
+    canonical_table: invoice_line_item
+    canonical_field: tax_amount
+    transformation: "CAST(ITEM_TAX AS NUMERIC) / 100"
+    confidence: 0.93
+
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: ITEM_DESC
+    canonical_table: invoice_line_item
+    canonical_field: description
+    transformation: "TRIM(ITEM_DESC)"
+    confidence: 0.95
+
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: SERVICE_TYPE
+    canonical_table: invoice_line_item
+    canonical_field: service_type
+    transformation: "CASE SERVICE_TYPE WHEN 1 THEN 'voice' WHEN 2 THEN 'data' WHEN 3 THEN 'sms' WHEN 4 THEN 'vas' WHEN 5 THEN 'roaming' ELSE 'other' END"
+    confidence: 0.88
+
+  - vendor_table: CBS_BILL_ITEM
+    vendor_field: QUANTITY
+    canonical_table: invoice_line_item
+    canonical_field: quantity
+    transformation: "CAST(QUANTITY AS INT64)"
+    confidence: 0.95
+
+  # --- CBS_PAYMENT: Payment records ---
+  - vendor_table: CBS_PAYMENT
+    vendor_field: PAYMENT_NO
+    canonical_table: payment
+    canonical_field: payment_id
+    transformation: "CAST(PAYMENT_NO AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: CBS_PAYMENT
+    vendor_field: ACCT_KEY
+    canonical_table: payment
+    canonical_field: account_id
+    transformation: "CAST(ACCT_KEY AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: CBS_PAYMENT
+    vendor_field: PAYMENT_AMT
+    canonical_table: payment
+    canonical_field: payment_amount
+    transformation: "CAST(PAYMENT_AMT AS NUMERIC) / 100"
+    confidence: 0.97
+
+  - vendor_table: CBS_PAYMENT
+    vendor_field: PAYMENT_DATE
+    canonical_table: payment
+    canonical_field: payment_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', PAYMENT_DATE)"
+    confidence: 0.95
+
+  - vendor_table: CBS_PAYMENT
+    vendor_field: PAYMENT_METHOD
+    canonical_table: payment
+    canonical_field: payment_method
+    transformation: "CASE PAYMENT_METHOD WHEN 1 THEN 'cash' WHEN 2 THEN 'credit_card' WHEN 3 THEN 'bank_transfer' WHEN 4 THEN 'direct_debit' WHEN 5 THEN 'voucher' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: CBS_PAYMENT
+    vendor_field: PAYMENT_STATUS
+    canonical_table: payment
+    canonical_field: payment_status
+    transformation: "CASE PAYMENT_STATUS WHEN 0 THEN 'pending' WHEN 1 THEN 'completed' WHEN 2 THEN 'failed' WHEN 3 THEN 'reversed' ELSE 'unknown' END"
+    confidence: 0.88
+
+  - vendor_table: CBS_PAYMENT
+    vendor_field: RECEIPT_NO
+    canonical_table: payment
+    canonical_field: receipt_number
+    transformation: "TRIM(RECEIPT_NO)"
+    confidence: 0.90
+
+  - vendor_table: CBS_PAYMENT
+    vendor_field: CHANNEL_CD
+    canonical_table: payment
+    canonical_field: payment_channel
+    transformation: "CASE CHANNEL_CD WHEN 1 THEN 'retail' WHEN 2 THEN 'online' WHEN 3 THEN 'mobile_app' WHEN 4 THEN 'bank' WHEN 5 THEN 'agent' ELSE 'other' END"
+    confidence: 0.82
+
+  # --- CBS_AR: Accounts receivable / revenue recognition ---
+  - vendor_table: CBS_AR
+    vendor_field: AR_BALANCE
+    canonical_table: accounts_receivable
+    canonical_field: outstanding_balance
+    transformation: "CAST(AR_BALANCE AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: CBS_AR
+    vendor_field: OVERDUE_AMT
+    canonical_table: accounts_receivable
+    canonical_field: overdue_amount
+    transformation: "CAST(OVERDUE_AMT AS NUMERIC) / 100"
+    confidence: 0.88
+
+  - vendor_table: CBS_AR
+    vendor_field: LAST_PAYMENT_DATE
+    canonical_table: accounts_receivable
+    canonical_field: last_payment_date
+    transformation: "PARSE_DATE('%Y%m%d', LAST_PAYMENT_DATE)"
+    confidence: 0.90
+
+  - vendor_table: CBS_BILL
+    vendor_field: RECURRING_CHARGE
+    canonical_table: revenue_summary
+    canonical_field: recurring_revenue
+    transformation: "CAST(RECURRING_CHARGE AS NUMERIC) / 100"
+    confidence: 0.88
+
+  - vendor_table: CBS_BILL
+    vendor_field: USAGE_CHARGE
+    canonical_table: revenue_summary
+    canonical_field: usage_revenue
+    transformation: "CAST(USAGE_CHARGE AS NUMERIC) / 100"
+    confidence: 0.88

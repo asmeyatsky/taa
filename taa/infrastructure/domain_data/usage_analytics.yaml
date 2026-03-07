@@ -1,0 +1,351 @@
+domain: usage_analytics
+tables:
+  - name: usage_summary
+    description: "Aggregated subscriber usage summaries across voice, data, and messaging services"
+    columns:
+      - name: subscriber_id
+        type: STRING
+        description: "Unique subscriber identifier"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Subscriber MSISDN"
+      - name: usage_date
+        type: DATE
+        description: "Usage aggregation date"
+        nullable: false
+      - name: usage_period
+        type: STRING
+        description: "Aggregation period (daily/weekly/monthly)"
+        nullable: false
+      - name: voice_minutes_mo
+        type: FLOAT64
+        description: "Mobile-originated voice minutes"
+      - name: voice_minutes_mt
+        type: FLOAT64
+        description: "Mobile-terminated voice minutes"
+      - name: sms_count_mo
+        type: INT64
+        description: "Mobile-originated SMS count"
+      - name: sms_count_mt
+        type: INT64
+        description: "Mobile-terminated SMS count"
+      - name: data_usage_mb
+        type: FLOAT64
+        description: "Total data usage in MB"
+      - name: data_usage_5g_mb
+        type: FLOAT64
+        description: "Data usage on 5G network in MB"
+      - name: data_usage_4g_mb
+        type: FLOAT64
+        description: "Data usage on 4G network in MB"
+      - name: data_usage_3g_mb
+        type: FLOAT64
+        description: "Data usage on 3G network in MB"
+      - name: data_usage_wifi_mb
+        type: FLOAT64
+        description: "Data usage via WiFi offload in MB"
+      - name: total_charge
+        type: NUMERIC
+        description: "Total rated charge for the usage period"
+      - name: average_throughput_mbps
+        type: FLOAT64
+        description: "Average data throughput in Mbps"
+      - name: peak_throughput_mbps
+        type: FLOAT64
+        description: "Peak data throughput observed in Mbps"
+      - name: session_count
+        type: INT64
+        description: "Number of data sessions in the period"
+      - name: unique_cell_count
+        type: INT64
+        description: "Number of unique cells the subscriber connected to"
+      - name: roaming_data_mb
+        type: FLOAT64
+        description: "Data usage while roaming in MB"
+      - name: service_type
+        type: STRING
+        description: "Primary service type (prepaid/postpaid/hybrid)"
+
+  - name: network_slice_usage
+    description: "5G network slice usage records for SLA monitoring and billing"
+    columns:
+      - name: record_id
+        type: STRING
+        description: "Unique slice usage record identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+        nullable: false
+      - name: slice_id
+        type: STRING
+        description: "Network slice identifier"
+        nullable: false
+      - name: slice_name
+        type: STRING
+        description: "Human-readable network slice name"
+      - name: slice_type
+        type: STRING
+        description: "Slice category (eMBB/URLLC/mMTC)"
+        nullable: false
+      - name: usage_date
+        type: DATE
+        description: "Usage date"
+        nullable: false
+      - name: bytes_uplink
+        type: INT64
+        description: "Uplink bytes transferred on the slice"
+      - name: bytes_downlink
+        type: INT64
+        description: "Downlink bytes transferred on the slice"
+      - name: session_count
+        type: INT64
+        description: "Number of sessions on the slice"
+      - name: average_latency_ms
+        type: FLOAT64
+        description: "Average end-to-end latency in milliseconds"
+      - name: max_latency_ms
+        type: FLOAT64
+        description: "Maximum observed latency in milliseconds"
+      - name: packet_loss_pct
+        type: FLOAT64
+        description: "Packet loss percentage"
+      - name: sla_tier
+        type: STRING
+        description: "SLA tier assigned (gold/silver/bronze/best_effort)"
+      - name: sla_met_flag
+        type: BOOLEAN
+        description: "Flag indicating whether the SLA was met for the period"
+      - name: throughput_guaranteed_mbps
+        type: FLOAT64
+        description: "Guaranteed throughput per the slice SLA in Mbps"
+      - name: throughput_actual_mbps
+        type: FLOAT64
+        description: "Actual measured throughput in Mbps"
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge for the slice usage"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: arpu_analysis
+    description: "Average Revenue Per User analysis with revenue breakdown by service"
+    columns:
+      - name: record_id
+        type: STRING
+        description: "Unique ARPU analysis record identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+        nullable: false
+      - name: account_id
+        type: STRING
+        description: "Billing account identifier"
+      - name: analysis_period
+        type: STRING
+        description: "Analysis period label (e.g. 2025-Q4, 2025-12)"
+        nullable: false
+      - name: analysis_date
+        type: DATE
+        description: "Date the analysis was computed"
+        nullable: false
+      - name: recurring_revenue
+        type: NUMERIC
+        description: "Monthly recurring revenue from subscriptions"
+      - name: usage_revenue
+        type: NUMERIC
+        description: "Revenue from usage-based charges"
+      - name: one_time_revenue
+        type: NUMERIC
+        description: "Revenue from one-time charges (activations, device sales)"
+      - name: total_revenue
+        type: NUMERIC
+        description: "Total revenue across all streams"
+      - name: discount_given
+        type: NUMERIC
+        description: "Total discounts applied"
+      - name: net_revenue
+        type: NUMERIC
+        description: "Net revenue after discounts"
+      - name: data_arpu
+        type: NUMERIC
+        description: "ARPU contribution from data services"
+      - name: voice_arpu
+        type: NUMERIC
+        description: "ARPU contribution from voice services"
+      - name: sms_arpu
+        type: NUMERIC
+        description: "ARPU contribution from SMS services"
+      - name: vas_arpu
+        type: NUMERIC
+        description: "ARPU contribution from value-added services"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: churn_feature
+    description: "Churn prediction feature store with behavioral and usage indicators"
+    columns:
+      - name: feature_id
+        type: STRING
+        description: "Unique feature record identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+        nullable: false
+      - name: computation_date
+        type: DATE
+        description: "Date the features were computed"
+        nullable: false
+      - name: tenure_days
+        type: INT64
+        description: "Subscriber tenure in days since activation"
+      - name: days_since_last_activity
+        type: INT64
+        description: "Days since the subscriber last generated any usage"
+      - name: avg_daily_data_mb_30d
+        type: FLOAT64
+        description: "Average daily data usage in MB over the last 30 days"
+      - name: avg_daily_voice_min_30d
+        type: FLOAT64
+        description: "Average daily voice minutes over the last 30 days"
+      - name: complaint_count_90d
+        type: INT64
+        description: "Number of complaints filed in the last 90 days"
+      - name: payment_delay_avg_days
+        type: FLOAT64
+        description: "Average payment delay in days over recent billing cycles"
+      - name: plan_change_count_6m
+        type: INT64
+        description: "Number of plan changes in the last 6 months"
+      - name: data_usage_trend
+        type: STRING
+        description: "Data usage trend direction (increasing/stable/declining)"
+      - name: voice_usage_trend
+        type: STRING
+        description: "Voice usage trend direction (increasing/stable/declining)"
+      - name: revenue_trend
+        type: STRING
+        description: "Revenue contribution trend (increasing/stable/declining)"
+      - name: support_call_count_30d
+        type: INT64
+        description: "Number of support calls in the last 30 days"
+      - name: network_quality_score
+        type: FLOAT64
+        description: "Subscriber-perceived network quality score (0-100)"
+      - name: device_age_months
+        type: INT64
+        description: "Age of the subscriber's current device in months"
+      - name: contract_remaining_days
+        type: INT64
+        description: "Days remaining on the current contract (0 if month-to-month)"
+      - name: predicted_churn_probability
+        type: FLOAT64
+        description: "Model-predicted churn probability (0.0 to 1.0)"
+
+  - name: edge_compute_session
+    description: "Edge computing session records for MEC usage tracking and billing"
+    columns:
+      - name: session_id
+        type: STRING
+        description: "Unique edge compute session identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+        nullable: false
+      - name: application_id
+        type: STRING
+        description: "Edge application identifier"
+        nullable: false
+      - name: application_name
+        type: STRING
+        description: "Edge application name (e.g. cloud_gaming, ar_navigation)"
+      - name: edge_node_id
+        type: STRING
+        description: "Edge compute node identifier"
+      - name: edge_location
+        type: STRING
+        description: "Physical location of the edge node"
+      - name: usage_date
+        type: DATE
+        description: "Session usage date"
+        nullable: false
+      - name: session_start
+        type: TIMESTAMP
+        description: "Session start timestamp"
+        nullable: false
+      - name: session_end
+        type: TIMESTAMP
+        description: "Session end timestamp"
+      - name: duration_seconds
+        type: INT64
+        description: "Session duration in seconds"
+      - name: data_processed_mb
+        type: FLOAT64
+        description: "Data processed at the edge in MB"
+      - name: latency_ms
+        type: FLOAT64
+        description: "Average session latency in milliseconds"
+      - name: compute_units
+        type: FLOAT64
+        description: "Compute units consumed during the session"
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge for the edge compute session"
+
+  - name: subscriber_journey_event
+    description: "Subscriber lifecycle journey events for experience and engagement tracking"
+    columns:
+      - name: event_id
+        type: STRING
+        description: "Unique journey event identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+        nullable: false
+      - name: event_date
+        type: DATE
+        description: "Event date"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "Event timestamp"
+        nullable: false
+      - name: journey_stage
+        type: STRING
+        description: "Lifecycle journey stage (awareness/acquisition/activation/engagement/retention/win_back)"
+        nullable: false
+      - name: event_type
+        type: STRING
+        description: "Event type (app_install/first_call/plan_change/complaint/nps_survey/churn_signal)"
+        nullable: false
+      - name: channel
+        type: STRING
+        description: "Interaction channel (app/web/store/call_center/sms/push_notification)"
+      - name: event_detail
+        type: STRING
+        description: "Free-text event detail or description"
+      - name: campaign_id
+        type: STRING
+        description: "Associated marketing campaign identifier"
+      - name: response_flag
+        type: BOOLEAN
+        description: "Flag indicating whether the subscriber responded to a campaign or action"
+      - name: satisfaction_score
+        type: INT64
+        description: "Customer satisfaction score (1-5)"
+      - name: nps_score
+        type: INT64
+        description: "Net Promoter Score response (0-10)"
+      - name: agent_id
+        type: STRING
+        description: "Agent identifier if the event involved human interaction"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"

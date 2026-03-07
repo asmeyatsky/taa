@@ -7,6 +7,10 @@ tables:
         type: STRING
         description: "Unique product identifier"
         nullable: false
+      - name: product_code
+        type: STRING
+        description: "Short alphanumeric product code for internal reference"
+        nullable: false
       - name: product_name
         type: STRING
         description: "Product display name"
@@ -14,12 +18,48 @@ tables:
       - name: product_type
         type: STRING
         description: "Product type (plan/addon/device/bundle)"
+      - name: product_family
+        type: STRING
+        description: "Product family grouping (e.g. consumer_mobile, enterprise_fixed)"
+      - name: product_line
+        type: STRING
+        description: "Product line within the family (e.g. postpaid_premium, prepaid_youth)"
       - name: category
         type: STRING
         description: "Product category"
+      - name: is_bundle
+        type: BOOLEAN
+        description: "Flag indicating whether this product is a bundle of other products"
+      - name: parent_product_id
+        type: STRING
+        description: "Reference to parent product for variant or sub-product relationships"
+      - name: channel_availability
+        type: STRING
+        description: "Sales channel availability (online/retail/dealer/all)"
+      - name: min_commitment_months
+        type: INT64
+        description: "Minimum contract commitment period in months"
+      - name: max_quantity
+        type: INT64
+        description: "Maximum quantity a single customer can purchase"
+      - name: technology
+        type: STRING
+        description: "Applicable network technology (2G/3G/4G/5G/FWA)"
+      - name: is_5g_exclusive
+        type: BOOLEAN
+        description: "Flag indicating whether the product is available only on 5G network"
+      - name: regulatory_approval
+        type: STRING
+        description: "Regulatory approval reference code"
+      - name: launch_date
+        type: DATE
+        description: "Product commercial launch date"
+      - name: retirement_date
+        type: DATE
+        description: "Product retirement or end-of-sale date"
       - name: effective_date
         type: DATE
-        description: "Product effective date"
+        description: "Product effective date for billing and provisioning"
         nullable: false
       - name: expiry_date
         type: DATE
@@ -34,9 +74,15 @@ tables:
         type: STRING
         description: "Product status (active/retired)"
         nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last update timestamp"
 
   - name: product_offering
-    description: "Product offering with pricing tiers"
+    description: "Product offering with pricing tiers and service parameters"
     columns:
       - name: offering_id
         type: STRING
@@ -49,15 +95,45 @@ tables:
       - name: offering_name
         type: STRING
         description: "Offering name"
+      - name: offering_type
+        type: STRING
+        description: "Type of offering (base/addon/promotion)"
       - name: data_allowance_mb
         type: INT64
         description: "Data allowance in MB"
+      - name: fair_usage_limit_mb
+        type: INT64
+        description: "Fair usage policy limit in MB after which throttling applies"
+      - name: throttle_speed_kbps
+        type: INT64
+        description: "Throttled speed in kbps after fair usage limit is exceeded"
       - name: voice_minutes
         type: INT64
         description: "Voice minutes included"
+      - name: international_minutes
+        type: INT64
+        description: "International voice minutes included"
       - name: sms_count
         type: INT64
         description: "SMS count included"
+      - name: roaming_data_mb
+        type: INT64
+        description: "Included roaming data allowance in MB"
+      - name: validity_days
+        type: INT64
+        description: "Offering validity period in days"
+      - name: auto_renew
+        type: BOOLEAN
+        description: "Flag indicating whether offering auto-renews at expiry"
+      - name: streaming_quality
+        type: STRING
+        description: "Maximum streaming quality allowed (SD/HD/FHD/4K)"
+      - name: priority_level
+        type: INT64
+        description: "Network priority level (1=highest, 5=lowest)"
+      - name: network_slice_type
+        type: STRING
+        description: "Assigned network slice type (eMBB/URLLC/mMTC/default)"
       - name: price
         type: NUMERIC
         description: "Offering price"
@@ -65,3 +141,210 @@ tables:
         type: DATE
         description: "Offering effective date"
         nullable: false
+      - name: expiry_date
+        type: DATE
+        description: "Offering expiry date"
+      - name: status
+        type: STRING
+        description: "Offering status (active/inactive/retired)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: rate_plan
+    description: "Rate plan definitions with pricing rules for usage-based charging"
+    columns:
+      - name: rate_plan_id
+        type: STRING
+        description: "Unique rate plan identifier"
+        nullable: false
+      - name: product_id
+        type: STRING
+        description: "Reference to associated product"
+        nullable: false
+      - name: rate_plan_name
+        type: STRING
+        description: "Rate plan display name"
+      - name: rate_type
+        type: STRING
+        description: "Rating method (flat/tiered/volume/event)"
+        nullable: false
+      - name: base_rate
+        type: NUMERIC
+        description: "Base rate charge applied before usage"
+      - name: per_unit_rate
+        type: NUMERIC
+        description: "Per-unit charge for consumption beyond included quantity"
+      - name: unit_of_measure
+        type: STRING
+        description: "Unit of measure for rating (minute/MB/SMS/event)"
+      - name: included_quantity
+        type: NUMERIC
+        description: "Quantity included in the base rate before overage applies"
+      - name: overage_rate
+        type: NUMERIC
+        description: "Per-unit rate charged for usage exceeding included quantity"
+      - name: currency
+        type: STRING
+        description: "Rate currency code"
+      - name: effective_date
+        type: DATE
+        description: "Rate plan effective date"
+        nullable: false
+      - name: expiry_date
+        type: DATE
+        description: "Rate plan expiry date"
+      - name: rate_zone
+        type: STRING
+        description: "Geographic or logical zone the rate applies to (local/national/international)"
+      - name: time_band
+        type: STRING
+        description: "Time band for differential pricing (peak/off_peak/weekend/all_day)"
+      - name: status
+        type: STRING
+        description: "Rate plan status (active/inactive/retired)"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: promotion
+    description: "Promotional offers with eligibility rules and redemption tracking"
+    columns:
+      - name: promotion_id
+        type: STRING
+        description: "Unique promotion identifier"
+        nullable: false
+      - name: promotion_name
+        type: STRING
+        description: "Promotion display name"
+        nullable: false
+      - name: promotion_type
+        type: STRING
+        description: "Promotion type (discount/bonus/free_trial/loyalty)"
+        nullable: false
+      - name: discount_type
+        type: STRING
+        description: "Discount mechanism (percentage/fixed/bonus_credit)"
+      - name: discount_value
+        type: NUMERIC
+        description: "Discount value (percentage or fixed amount depending on discount_type)"
+      - name: eligible_products
+        type: STRING
+        description: "Comma-separated list of eligible product IDs or 'ALL'"
+      - name: eligible_segments
+        type: STRING
+        description: "Comma-separated list of eligible customer segments or 'ALL'"
+      - name: channel
+        type: STRING
+        description: "Eligible sales channel (online/retail/dealer/all)"
+      - name: start_date
+        type: DATE
+        description: "Promotion start date"
+        nullable: false
+      - name: end_date
+        type: DATE
+        description: "Promotion end date"
+      - name: max_redemptions
+        type: INT64
+        description: "Maximum number of total redemptions allowed"
+      - name: current_redemptions
+        type: INT64
+        description: "Current count of redemptions used"
+      - name: stackable_flag
+        type: BOOLEAN
+        description: "Flag indicating whether promotion can be combined with other promotions"
+      - name: promo_code
+        type: STRING
+        description: "Promotional code for customer-initiated redemption"
+      - name: status
+        type: STRING
+        description: "Promotion status (active/scheduled/expired/cancelled)"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: bundle
+    description: "Bundle definitions grouping multiple products into packaged offerings"
+    columns:
+      - name: bundle_id
+        type: STRING
+        description: "Unique bundle identifier"
+        nullable: false
+      - name: bundle_name
+        type: STRING
+        description: "Bundle display name"
+        nullable: false
+      - name: bundle_type
+        type: STRING
+        description: "Bundle composition type (fixed/flexible)"
+        nullable: false
+      - name: product_ids
+        type: STRING
+        description: "Comma-separated list of all product IDs included in the bundle"
+      - name: mandatory_product_ids
+        type: STRING
+        description: "Comma-separated list of mandatory product IDs that must be selected"
+      - name: min_products
+        type: INT64
+        description: "Minimum number of products that must be selected (for flexible bundles)"
+      - name: max_products
+        type: INT64
+        description: "Maximum number of products that can be selected (for flexible bundles)"
+      - name: bundle_discount_pct
+        type: NUMERIC
+        description: "Discount percentage applied when purchasing as a bundle"
+      - name: effective_date
+        type: DATE
+        description: "Bundle effective date"
+        nullable: false
+      - name: expiry_date
+        type: DATE
+        description: "Bundle expiry date"
+      - name: status
+        type: STRING
+        description: "Bundle status (active/inactive/retired)"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: product_compatibility
+    description: "Product compatibility and dependency rules governing co-existence"
+    columns:
+      - name: rule_id
+        type: STRING
+        description: "Unique compatibility rule identifier"
+        nullable: false
+      - name: product_id_a
+        type: STRING
+        description: "First product in the compatibility relationship"
+        nullable: false
+      - name: product_id_b
+        type: STRING
+        description: "Second product in the compatibility relationship"
+        nullable: false
+      - name: compatibility_type
+        type: STRING
+        description: "Relationship type (requires/excludes/replaces/upgrades_to)"
+        nullable: false
+      - name: effective_date
+        type: DATE
+        description: "Rule effective date"
+        nullable: false
+      - name: expiry_date
+        type: DATE
+        description: "Rule expiry date"
+      - name: rule_description
+        type: STRING
+        description: "Human-readable description of the compatibility rule"
+      - name: enforcement_level
+        type: STRING
+        description: "Enforcement strictness (hard_block/soft_warning/informational)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last update timestamp"

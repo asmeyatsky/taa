@@ -34,9 +34,12 @@ class YAMLDomainModelRepository:
         for table_def in data.get("tables", []):
             columns: list[Column] = []
             for col_def in table_def.get("columns", []):
+                raw_type = col_def.get("type", "STRING")
+                if raw_type == "BOOLEAN":
+                    raw_type = "BOOL"
                 columns.append(Column(
                     name=col_def["name"],
-                    bigquery_type=BigQueryType(col_def.get("type", "STRING")),
+                    bigquery_type=BigQueryType(raw_type),
                     description=col_def.get("description", ""),
                     nullable=col_def.get("nullable", True),
                 ))

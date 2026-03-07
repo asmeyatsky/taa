@@ -5,52 +5,161 @@ Domain: {{ pipeline.telco_domain.value }}
 {% if pipeline.source_vendor %}Vendor: {{ pipeline.source_vendor.value }}{% endif %}
 """
 
+import argparse
+import json
+import logging
+from datetime import datetime
+
 import apache_beam as beam
-from apache_beam.options.pipeline_options import PipelineOptions
+from apache_beam.options.pipeline_options import PipelineOptions, StandardOptions
+from apache_beam.io.gcp.bigquery import WriteToBigQuery, BigQueryDisposition
+from apache_beam.metrics import Metrics
+
+logger = logging.getLogger(__name__)
 
 
-class {{ pipeline.name | title | replace('_', '') }}Options(PipelineOptions):
-    @classmethod
-    def _add_argparse_args(cls, parser):
-        parser.add_argument('--input_path', required=True, help='GCS input path')
-        parser.add_argument('--output_table', required=True, help='BigQuery output table')
-        parser.add_argument('--temp_location', required=True, help='GCS temp location')
+class ParseRecord(beam.DoFn):
+    """Parse raw input records with error handling."""
+
+    def __init__(self):
+        self.parse_success = Metrics.counter(self.__class__, 'parse_success')
+        self.parse_errors = Metrics.counter(self.__class__, 'parse_errors')
+
+    def process(self, line):
+        try:
+            record = json.loads(line)
+            self.parse_success.inc()
+            yield beam.pvalue.TaggedOutput('parsed', record)
+        except (json.JSONDecodeError, ValueError) as e:
+            self.parse_errors.inc()
+            yield beam.pvalue.TaggedOutput('errors', {
+                'raw_record': line,
+                'error': str(e),
+                'timestamp': datetime.utcnow().isoformat(),
+                'pipeline': '{{ pipeline.name }}',
+            })
 
 
-def run():
-    options = {{ pipeline.name | title | replace('_', '') }}Options()
+class ValidateRecord(beam.DoFn):
+    """Validate record against schema requirements."""
+
+    REQUIRED_FIELDS = {{ pipeline.target_tables | default(["'subscriber_id'", "'event_date'"]) }}
+
+    def __init__(self):
+        self.valid_count = Metrics.counter(self.__class__, 'valid_records')
+        self.invalid_count = Metrics.counter(self.__class__, 'invalid_records')
+
+    def process(self, record):
+        missing = [f for f in self.REQUIRED_FIELDS if not record.get(f)]
+        if missing:
+            self.invalid_count.inc()
+            yield beam.pvalue.TaggedOutput('invalid', {
+                'record': record,
+                'missing_fields': missing,
+                'timestamp': datetime.utcnow().isoformat(),
+            })
+        else:
+            self.valid_count.inc()
+            yield beam.pvalue.TaggedOutput('valid', record)
+
+
+class EnrichRecord(beam.DoFn):
+    """Enrich records with derived fields and standardization."""
+
+    def process(self, record):
+        # Add processing metadata
+        record['_ingestion_timestamp'] = datetime.utcnow().isoformat()
+        record['_source_pipeline'] = '{{ pipeline.name }}'
+        record['_source_vendor'] = '{{ pipeline.source_vendor.value if pipeline.source_vendor else "unknown" }}'
+
+        # Standardize date fields
+        for date_field in ['event_date', 'activation_date', 'bill_cycle_date', 'snapshot_date']:
+            if date_field in record and record[date_field]:
+                try:
+                    # Handle multiple date formats
+                    for fmt in ['%Y-%m-%d', '%Y%m%d', '%d/%m/%Y', '%m/%d/%Y']:
+                        try:
+                            parsed = datetime.strptime(str(record[date_field]), fmt)
+                            record[date_field] = parsed.strftime('%Y-%m-%d')
+                            break
+                        except ValueError:
+                            continue
+                except Exception:
+                    pass
+
+        yield record
+
+
+class DeduplicateRecords(beam.DoFn):
+    """Remove duplicate records based on natural key."""
+
+    def __init__(self):
+        self.duplicates = Metrics.counter(self.__class__, 'duplicates_removed')
+
+    def process(self, element):
+        key, records = element
+        records_list = list(records)
+        if len(records_list) > 1:
+            self.duplicates.inc(len(records_list) - 1)
+        # Keep the latest record
+        yield max(records_list, key=lambda r: r.get('_ingestion_timestamp', ''))
+
+
+def run(argv=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_path', required=True, help='GCS input path pattern')
+    parser.add_argument('--output_table', required=True, help='BigQuery output table (project:dataset.table)')
+    parser.add_argument('--dead_letter_table', default=None, help='BigQuery dead letter table')
+    parser.add_argument('--temp_location', required=True, help='GCS temp location')
+    known_args, pipeline_args = parser.parse_known_args(argv)
+
+    options = PipelineOptions(pipeline_args)
+    options.view_as(StandardOptions).runner = options.view_as(StandardOptions).runner or 'DataflowRunner'
 
     with beam.Pipeline(options=options) as p:
-        (
+        # Read and parse
+        parsed = (
             p
-            | "ReadFromGCS" >> beam.io.ReadFromText(options.input_path)
-            | "ParseRecords" >> beam.Map(parse_record)
-            | "ValidateRecords" >> beam.Filter(validate_record)
-            | "TransformRecords" >> beam.Map(transform_record)
-            | "WriteToBigQuery" >> beam.io.WriteToBigQuery(
-                options.output_table,
-                write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND,
-                create_disposition=beam.io.BigQueryDisposition.CREATE_NEVER,
-            )
+            | "ReadFromGCS" >> beam.io.ReadFromText(known_args.input_path)
+            | "ParseRecords" >> beam.ParDo(ParseRecord()).with_outputs('parsed', 'errors')
         )
 
+        # Validate
+        validated = (
+            parsed.parsed
+            | "ValidateRecords" >> beam.ParDo(ValidateRecord()).with_outputs('valid', 'invalid')
+        )
 
-def parse_record(line: str) -> dict:
-    """Parse a raw input record."""
-    # Implementation depends on source format
-    import json
-    return json.loads(line)
+        # Enrich and deduplicate
+        enriched = (
+            validated.valid
+            | "EnrichRecords" >> beam.ParDo(EnrichRecord())
+            | "KeyByNaturalKey" >> beam.Map(lambda r: (r.get('subscriber_id', '') + '_' + r.get('event_date', ''), r))
+            | "GroupByKey" >> beam.GroupByKey()
+            | "Deduplicate" >> beam.ParDo(DeduplicateRecords())
+        )
 
+        # Write to BigQuery
+        enriched | "WriteToBigQuery" >> WriteToBigQuery(
+            known_args.output_table,
+            write_disposition=BigQueryDisposition.WRITE_APPEND,
+            create_disposition=BigQueryDisposition.CREATE_NEVER,
+            insert_retry_strategy='RETRY_ON_TRANSIENT_ERROR',
+        )
 
-def validate_record(record: dict) -> bool:
-    """Validate record meets quality requirements."""
-    return bool(record)
-
-
-def transform_record(record: dict) -> dict:
-    """Apply transformations to canonical format."""
-    return record
+        # Dead letter queue
+        if known_args.dead_letter_table:
+            (
+                (parsed.errors, validated.invalid)
+                | "FlattenErrors" >> beam.Flatten()
+                | "WriteDeadLetters" >> WriteToBigQuery(
+                    known_args.dead_letter_table,
+                    write_disposition=BigQueryDisposition.WRITE_APPEND,
+                    create_disposition=BigQueryDisposition.CREATE_IF_NEEDED,
+                )
+            )
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     run()

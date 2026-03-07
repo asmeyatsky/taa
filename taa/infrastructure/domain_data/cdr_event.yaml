@@ -1,124 +1,697 @@
 domain: cdr_event
 tables:
   - name: voice_cdr
-    description: "Voice call detail records"
+    description: "Voice call detail records capturing all circuit-switched and VoIP call events with full rating, routing, and roaming metadata"
     columns:
       - name: cdr_id
         type: STRING
-        description: "Unique CDR identifier"
+        description: "Unique CDR identifier assigned by the mediation platform"
         nullable: false
       - name: subscriber_id
         type: STRING
-        description: "Calling subscriber identifier"
+        description: "Calling subscriber identifier (internal CRM key)"
         nullable: false
       - name: msisdn
         type: STRING
-        description: "Calling MSISDN"
+        description: "Calling party MSISDN in E.164 format"
         nullable: false
+      - name: calling_imsi
+        type: STRING
+        description: "IMSI of the calling party SIM card"
+        nullable: true
       - name: called_number
         type: STRING
-        description: "Called party number"
+        description: "Called party number in E.164 format"
+        nullable: true
+      - name: called_imsi
+        type: STRING
+        description: "IMSI of the called party SIM card (available for on-net calls)"
+        nullable: true
       - name: event_date
         type: DATE
-        description: "Call date"
+        description: "Call date partition key (UTC)"
         nullable: false
       - name: event_timestamp
         type: TIMESTAMP
-        description: "Call start timestamp"
+        description: "Call setup start timestamp in UTC"
         nullable: false
       - name: duration_seconds
         type: INT64
-        description: "Call duration in seconds"
+        description: "Billable call duration in seconds (rounded per tariff rules)"
+        nullable: true
+      - name: original_duration
+        type: INT64
+        description: "Actual call duration in seconds before rounding or capping"
+        nullable: true
       - name: event_type
         type: STRING
-        description: "Call type (MO/MT/CF)"
+        description: "Call direction: MO (mobile originated), MT (mobile terminated), CF (call forwarded)"
+        nullable: true
+      - name: call_type
+        type: STRING
+        description: "Call classification: local, national, international, premium, emergency, toll_free"
+        nullable: true
+      - name: network_type
+        type: STRING
+        description: "Radio access network at call setup: 2G, 3G, 4G, 5G, WiFi"
+        nullable: true
       - name: cell_id
         type: STRING
-        description: "Originating cell ID"
+        description: "Originating cell tower identifier (CGI format)"
+        nullable: true
       - name: imei
         type: STRING
-        description: "Device IMEI"
+        description: "Handset IMEI (15-digit) of the calling device"
+        nullable: true
+      - name: roaming_flag
+        type: BOOL
+        description: "True if the subscriber was roaming at the time of the call"
+        nullable: true
+      - name: roaming_partner
+        type: STRING
+        description: "VPLMN operator name or TADIG code when roaming"
+        nullable: true
+      - name: msc_id
+        type: STRING
+        description: "Mobile Switching Centre identifier that handled the call"
+        nullable: true
+      - name: switch_id
+        type: STRING
+        description: "Logical switch identifier in the core network"
+        nullable: true
+      - name: trunk_group_in
+        type: STRING
+        description: "Incoming trunk group identifier for interconnect routing"
+        nullable: true
+      - name: trunk_group_out
+        type: STRING
+        description: "Outgoing trunk group identifier for interconnect routing"
+        nullable: true
+      - name: bearer_service
+        type: STRING
+        description: "Bearer service code (e.g., speech, 3.1kHz audio, FAX)"
+        nullable: true
+      - name: supplementary_service
+        type: STRING
+        description: "Supplementary service invoked (e.g., call_hold, call_waiting, CLIR)"
+        nullable: true
+      - name: termination_reason
+        type: STRING
+        description: "Call release cause code (e.g., normal_clearing, user_busy, no_answer, network_failure)"
+        nullable: true
       - name: rated_amount
         type: NUMERIC
-        description: "Rated charge amount"
+        description: "Rated charge amount in local currency before tax"
+        nullable: true
+      - name: tax_amount
+        type: NUMERIC
+        description: "Tax amount applied to the rated charge"
+        nullable: true
       - name: discount_amount
         type: NUMERIC
-        description: "Applied discount"
+        description: "Discount amount applied from bundle, loyalty, or promotional offer"
+        nullable: true
+      - name: discount_code
+        type: STRING
+        description: "Identifier for the discount or promotion applied during rating"
+        nullable: true
+      - name: free_minutes_used
+        type: INT64
+        description: "Number of bundled free minutes consumed by this call"
+        nullable: true
+      - name: charge_category
+        type: STRING
+        description: "Charge category for GL posting: voice_onnet, voice_offnet, voice_international, voice_roaming"
+        nullable: true
+      - name: record_type
+        type: STRING
+        description: "Mediation record type: normal, partial, continuation, hot_billing"
+        nullable: true
+      - name: file_id
+        type: STRING
+        description: "Source CDR file identifier from network element or mediation"
+        nullable: true
+      - name: record_sequence
+        type: INT64
+        description: "Sequence number of this record within the source file"
+        nullable: true
 
   - name: data_cdr
-    description: "Data usage detail records"
+    description: "Data/GPRS session detail records capturing packet-switched usage with QoS, content classification, and network node metadata"
     columns:
       - name: cdr_id
         type: STRING
-        description: "Unique CDR identifier"
+        description: "Unique CDR identifier assigned by the mediation platform"
         nullable: false
       - name: subscriber_id
         type: STRING
-        description: "Subscriber identifier"
+        description: "Subscriber identifier (internal CRM key)"
         nullable: false
       - name: msisdn
         type: STRING
-        description: "Subscriber MSISDN"
+        description: "Subscriber MSISDN in E.164 format"
         nullable: false
       - name: event_date
         type: DATE
-        description: "Usage date"
+        description: "Usage date partition key (UTC)"
         nullable: false
       - name: event_timestamp
         type: TIMESTAMP
-        description: "Session start timestamp"
+        description: "PDP context or PDU session start timestamp in UTC"
         nullable: false
+      - name: session_id
+        type: STRING
+        description: "Unique data session identifier (PDP context ID or PDU session ID)"
+        nullable: true
+      - name: session_duration_seconds
+        type: INT64
+        description: "Total session duration from context activation to deactivation in seconds"
+        nullable: true
       - name: bytes_uploaded
         type: INT64
-        description: "Bytes uploaded"
+        description: "Total bytes uploaded during the session"
+        nullable: true
       - name: bytes_downloaded
         type: INT64
-        description: "Bytes downloaded"
+        description: "Total bytes downloaded during the session"
+        nullable: true
+      - name: volume_unit
+        type: STRING
+        description: "Volume billing granularity: byte, KB, MB, GB"
+        nullable: true
       - name: source_ip
         type: STRING
-        description: "Source IP address"
+        description: "IP address assigned to the UE for this session"
+        nullable: true
       - name: apn
         type: STRING
-        description: "Access Point Name"
+        description: "Access Point Name used for the data session"
+        nullable: true
       - name: cell_id
         type: STRING
-        description: "Serving cell ID"
+        description: "Serving cell ID at session start (CGI format)"
+        nullable: true
       - name: imei
         type: STRING
-        description: "Device IMEI"
+        description: "Handset IMEI (15-digit) of the subscriber device"
+        nullable: true
+      - name: rating_group
+        type: INT64
+        description: "Online charging rating group identifier for quota management"
+        nullable: true
+      - name: service_identifier
+        type: INT64
+        description: "Service identifier within the rating group for granular charging"
+        nullable: true
+      - name: qos_class
+        type: STRING
+        description: "QoS class indicator (QCI value or 5QI for 5G)"
+        nullable: true
+      - name: content_type
+        type: STRING
+        description: "DPI-classified content type: streaming, social_media, browsing, gaming, voip, p2p"
+        nullable: true
+      - name: url_category
+        type: STRING
+        description: "URL category from content filtering engine (e.g., news, entertainment, adult)"
+        nullable: true
+      - name: bearer_type
+        type: STRING
+        description: "Bearer type: default, dedicated, emergency"
+        nullable: true
+      - name: sgsn_address
+        type: STRING
+        description: "Serving GPRS Support Node IP address (4G: MME address)"
+        nullable: true
+      - name: ggsn_address
+        type: STRING
+        description: "Gateway GPRS Support Node IP address (4G: PGW address)"
+        nullable: true
+      - name: charging_id
+        type: STRING
+        description: "3GPP charging ID linking partial records for the same session"
+        nullable: true
+      - name: roaming_flag
+        type: BOOL
+        description: "True if the subscriber was roaming during this data session"
+        nullable: true
+      - name: roaming_partner
+        type: STRING
+        description: "VPLMN operator name or TADIG code when roaming"
+        nullable: true
+      - name: rat_type
+        type: STRING
+        description: "Radio Access Technology: GERAN, UTRAN, EUTRAN, NR, WLAN"
+        nullable: true
+      - name: uli
+        type: STRING
+        description: "User Location Information as reported by the network (encoded CGI/SAI/TAI)"
+        nullable: true
+      - name: timezone_offset
+        type: STRING
+        description: "UE timezone offset from UTC (e.g., +05:30)"
+        nullable: true
       - name: rated_amount
         type: NUMERIC
-        description: "Rated charge amount"
+        description: "Rated charge amount in local currency before tax"
+        nullable: true
+      - name: charge_category
+        type: STRING
+        description: "Charge category for GL posting: data_domestic, data_roaming, data_zero_rated"
+        nullable: true
+      - name: record_type
+        type: STRING
+        description: "Mediation record type: normal, partial, continuation"
+        nullable: true
+      - name: file_id
+        type: STRING
+        description: "Source CDR file identifier from GGSN/PGW or mediation"
+        nullable: true
+      - name: record_sequence
+        type: INT64
+        description: "Sequence number of this record within the source file"
+        nullable: true
 
   - name: sms_cdr
-    description: "SMS detail records"
+    description: "SMS detail records for MO and MT short messages including multi-segment, delivery tracking, and roaming metadata"
     columns:
       - name: cdr_id
         type: STRING
-        description: "Unique CDR identifier"
+        description: "Unique CDR identifier assigned by the mediation platform"
         nullable: false
       - name: subscriber_id
         type: STRING
-        description: "Subscriber identifier"
+        description: "Subscriber identifier (internal CRM key)"
         nullable: false
       - name: msisdn
         type: STRING
-        description: "Sender MSISDN"
+        description: "Sender MSISDN in E.164 format"
         nullable: false
       - name: called_number
         type: STRING
-        description: "Recipient number"
+        description: "Recipient number in E.164 format"
+        nullable: true
       - name: event_date
         type: DATE
-        description: "SMS date"
+        description: "SMS date partition key (UTC)"
         nullable: false
       - name: event_timestamp
         type: TIMESTAMP
-        description: "SMS timestamp"
+        description: "SMS submission timestamp in UTC"
         nullable: false
       - name: event_type
         type: STRING
-        description: "SMS type (MO/MT)"
+        description: "SMS direction: MO (mobile originated), MT (mobile terminated)"
+        nullable: true
+      - name: smsc_address
+        type: STRING
+        description: "Short Message Service Centre address that relayed the message"
+        nullable: true
+      - name: message_class
+        type: STRING
+        description: "Message class per GSM 03.38: class_0 (flash), class_1, class_2 (SIM), class_3"
+        nullable: true
+      - name: encoding
+        type: STRING
+        description: "Character encoding scheme: GSM_7BIT, UCS2, BINARY"
+        nullable: true
+      - name: segment_count
+        type: INT64
+        description: "Number of concatenated SMS segments for long messages"
+        nullable: true
+      - name: delivery_status
+        type: STRING
+        description: "Delivery receipt status: delivered, failed, expired, pending"
+        nullable: true
+      - name: delivery_timestamp
+        type: TIMESTAMP
+        description: "Timestamp when the message was delivered to the recipient handset"
+        nullable: true
+      - name: roaming_flag
+        type: BOOL
+        description: "True if the subscriber was roaming when sending or receiving"
+        nullable: true
+      - name: origin_network
+        type: STRING
+        description: "Originating PLMN identifier or operator name"
+        nullable: true
+      - name: destination_network
+        type: STRING
+        description: "Destination PLMN identifier or operator name"
+        nullable: true
       - name: rated_amount
         type: NUMERIC
-        description: "Rated charge amount"
+        description: "Rated charge amount in local currency before tax"
+        nullable: true
+      - name: charge_category
+        type: STRING
+        description: "Charge category: sms_onnet, sms_offnet, sms_international, sms_premium"
+        nullable: true
+      - name: record_type
+        type: STRING
+        description: "Mediation record type: normal, duplicate_check"
+        nullable: true
+      - name: file_id
+        type: STRING
+        description: "Source CDR file identifier from SMSC or mediation"
+        nullable: true
+
+  - name: mms_cdr
+    description: "MMS detail records for multimedia messages including content metadata, delivery status, and charging information"
+    columns:
+      - name: cdr_id
+        type: STRING
+        description: "Unique MMS CDR identifier assigned by the mediation platform"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier (internal CRM key)"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Sender MSISDN in E.164 format"
+        nullable: false
+      - name: event_date
+        type: DATE
+        description: "MMS date partition key (UTC)"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "MMS submission timestamp in UTC"
+        nullable: false
+      - name: recipient_number
+        type: STRING
+        description: "Recipient MSISDN in E.164 format"
+        nullable: true
+      - name: event_type
+        type: STRING
+        description: "MMS direction: MO (mobile originated), MT (mobile terminated)"
+        nullable: true
+      - name: message_size_bytes
+        type: INT64
+        description: "Total MMS message size in bytes including all attachments"
+        nullable: true
+      - name: content_type_list
+        type: STRING
+        description: "Comma-separated MIME types of MMS content parts (e.g., image/jpeg,text/plain)"
+        nullable: true
+      - name: delivery_status
+        type: STRING
+        description: "Delivery status: delivered, failed, expired, rejected, pending"
+        nullable: true
+      - name: roaming_flag
+        type: BOOL
+        description: "True if the subscriber was roaming when sending or receiving"
+        nullable: true
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge amount in local currency before tax"
+        nullable: true
+      - name: charge_category
+        type: STRING
+        description: "Charge category: mms_domestic, mms_international, mms_roaming"
+        nullable: true
+      - name: smsc_address
+        type: STRING
+        description: "MMS Relay/Server address that processed the message"
+        nullable: true
+      - name: record_type
+        type: STRING
+        description: "Mediation record type: normal, duplicate_check"
+        nullable: true
+
+  - name: ussd_cdr
+    description: "USSD session detail records capturing interactive service requests such as balance inquiries, top-ups, and menu navigation"
+    columns:
+      - name: cdr_id
+        type: STRING
+        description: "Unique USSD CDR identifier assigned by the mediation platform"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier (internal CRM key)"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Subscriber MSISDN in E.164 format"
+        nullable: false
+      - name: event_date
+        type: DATE
+        description: "USSD event date partition key (UTC)"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "USSD session initiation timestamp in UTC"
+        nullable: false
+      - name: service_code
+        type: STRING
+        description: "USSD short code dialled by the subscriber (e.g., *123#, *100#)"
+        nullable: true
+      - name: operation_type
+        type: STRING
+        description: "Operation type: balance_inquiry, recharge, plan_activation, transfer, menu_browse"
+        nullable: true
+      - name: session_duration_seconds
+        type: INT64
+        description: "Total interactive USSD session duration in seconds"
+        nullable: true
+      - name: response_status
+        type: STRING
+        description: "Final session status: success, timeout, user_abort, system_error"
+        nullable: true
+      - name: gateway_id
+        type: STRING
+        description: "USSD gateway node identifier that processed the session"
+        nullable: true
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge amount if the USSD service is chargeable"
+        nullable: true
+      - name: record_type
+        type: STRING
+        description: "Mediation record type: normal, system_initiated"
+        nullable: true
+
+  - name: 5g_nr_event
+    description: "5G New Radio event records capturing network slice usage, QoS flow metrics, and ultra-low-latency session data for eMBB, URLLC, and mMTC services"
+    columns:
+      - name: event_id
+        type: STRING
+        description: "Unique 5G event identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier (internal CRM key)"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Subscriber MSISDN in E.164 format"
+        nullable: false
+      - name: event_date
+        type: DATE
+        description: "Event date partition key (UTC)"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "Event start timestamp in UTC"
+        nullable: false
+      - name: slice_id
+        type: STRING
+        description: "Network slice identifier (S-NSSAI: SST + SD combination)"
+        nullable: true
+      - name: slice_type
+        type: STRING
+        description: "Network slice service type: eMBB (enhanced Mobile Broadband), URLLC (Ultra-Reliable Low-Latency), mMTC (massive Machine Type Communications)"
+        nullable: true
+      - name: qos_flow_id
+        type: STRING
+        description: "QoS Flow Identifier within the PDU session"
+        nullable: true
+      - name: pdu_session_id
+        type: STRING
+        description: "PDU Session Identifier linking to the UPF session"
+        nullable: true
+      - name: gnodeb_id
+        type: STRING
+        description: "gNodeB (5G base station) identifier serving the subscriber"
+        nullable: true
+      - name: cell_id
+        type: STRING
+        description: "NR Cell Identity (NCI) of the serving cell"
+        nullable: true
+      - name: tracking_area
+        type: STRING
+        description: "5G Tracking Area Code for mobility management"
+        nullable: true
+      - name: bytes_uplink
+        type: INT64
+        description: "Total uplink bytes transferred in the session"
+        nullable: true
+      - name: bytes_downlink
+        type: INT64
+        description: "Total downlink bytes transferred in the session"
+        nullable: true
+      - name: latency_ms
+        type: FLOAT64
+        description: "Average end-to-end latency in milliseconds for the session"
+        nullable: true
+      - name: packet_loss_pct
+        type: FLOAT64
+        description: "Packet loss percentage observed during the session"
+        nullable: true
+      - name: throughput_mbps
+        type: FLOAT64
+        description: "Average throughput in Mbps during the session"
+        nullable: true
+      - name: rat_type
+        type: STRING
+        description: "Radio Access Technology: NR_SA (standalone), NR_NSA (non-standalone), NR_DSS (dynamic spectrum sharing)"
+        nullable: true
+      - name: dnn
+        type: STRING
+        description: "Data Network Name (5G equivalent of APN) used for the session"
+        nullable: true
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge amount in local currency before tax"
+        nullable: true
+      - name: sla_breach_flag
+        type: BOOL
+        description: "True if the session breached the SLA for the associated slice (e.g., latency or throughput threshold)"
+        nullable: true
+      - name: session_duration_seconds
+        type: INT64
+        description: "Total PDU session duration in seconds"
+        nullable: true
+      - name: imei
+        type: STRING
+        description: "5G device IMEI or IMEISV"
+        nullable: true
+
+  - name: volte_cdr
+    description: "VoLTE (Voice over LTE) call detail records capturing IMS-based voice and video calls with codec, QoS, and handover metadata"
+    columns:
+      - name: cdr_id
+        type: STRING
+        description: "Unique VoLTE CDR identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier (internal CRM key)"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Calling party MSISDN in E.164 format"
+        nullable: false
+      - name: event_date
+        type: DATE
+        description: "Call date partition key (UTC)"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "VoLTE call setup timestamp in UTC"
+        nullable: false
+      - name: called_number
+        type: STRING
+        description: "Called party number in E.164 format"
+        nullable: true
+      - name: duration_seconds
+        type: INT64
+        description: "Call duration in seconds"
+        nullable: true
+      - name: codec
+        type: STRING
+        description: "Voice codec used: AMR-WB (HD), AMR-NB, EVS, OPUS"
+        nullable: true
+      - name: qci
+        type: INT64
+        description: "QoS Class Identifier for the VoLTE bearer (typically QCI 1 for voice)"
+        nullable: true
+      - name: bearer_id
+        type: STRING
+        description: "Dedicated EPS bearer ID established for the VoLTE call"
+        nullable: true
+      - name: ims_charging_id
+        type: STRING
+        description: "IMS Charging Identifier (ICID) for correlation across IMS nodes"
+        nullable: true
+      - name: access_network_info
+        type: STRING
+        description: "P-Access-Network-Info header value identifying the access network"
+        nullable: true
+      - name: call_type
+        type: STRING
+        description: "Call type classification: voice, video, emergency (VoLTE e911)"
+        nullable: true
+      - name: video_flag
+        type: BOOL
+        description: "True if the call included a video component (ViLTE)"
+        nullable: true
+      - name: hd_voice_flag
+        type: BOOL
+        description: "True if the call used HD Voice (wideband codec)"
+        nullable: true
+      - name: srvcc_flag
+        type: BOOL
+        description: "True if Single Radio Voice Call Continuity handover occurred (VoLTE to 2G/3G circuit-switched)"
+        nullable: true
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge amount in local currency before tax"
+        nullable: true
+      - name: termination_cause
+        type: STRING
+        description: "SIP response code or IMS release reason: normal, user_busy, no_answer, server_error, srvcc_handover"
+        nullable: true
+
+  - name: event_error_log
+    description: "Error log for CDR records that failed parsing, validation, or rating during mediation processing, supporting retry and resolution tracking"
+    columns:
+      - name: error_id
+        type: STRING
+        description: "Unique error log entry identifier"
+        nullable: false
+      - name: source_file_id
+        type: STRING
+        description: "Identifier of the source CDR file that contained the erroneous record"
+        nullable: false
+      - name: record_sequence
+        type: INT64
+        description: "Sequence number of the failed record within the source file"
+        nullable: true
+      - name: error_code
+        type: STRING
+        description: "Standardized error code (e.g., ERR_PARSE_001, ERR_VALID_010, ERR_RATE_005)"
+        nullable: false
+      - name: error_description
+        type: STRING
+        description: "Human-readable description of the error encountered"
+        nullable: true
+      - name: error_category
+        type: STRING
+        description: "Error classification: parse, validation, rating, duplicate, enrichment"
+        nullable: true
+      - name: original_record_json
+        type: STRING
+        description: "JSON-serialized copy of the original CDR record that failed processing"
+        nullable: true
+      - name: event_date
+        type: DATE
+        description: "Date of the original event (if parseable), used for partitioning"
+        nullable: true
+      - name: processing_timestamp
+        type: TIMESTAMP
+        description: "Timestamp when the error was logged by the mediation pipeline"
+        nullable: false
+      - name: retry_count
+        type: INT64
+        description: "Number of reprocessing attempts made for this record"
+        nullable: true
+      - name: resolved_flag
+        type: BOOL
+        description: "True if the error has been resolved (record successfully reprocessed or manually cleared)"
+        nullable: true
+      - name: resolved_timestamp
+        type: TIMESTAMP
+        description: "Timestamp when the error was resolved"
+        nullable: true

@@ -16,3 +16,17 @@ rules:
     encryption_required: true
     kms_rotation_days: 30
     retention_months: 12
+  - rule_id: EU-GDPR-003
+    description: "ePrivacy Directive requires explicit consent for processing traffic and location data in electronic communications"
+    applicable_pii_categories: [msisdn, imsi, ip_address, location]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 12
+  - rule_id: EU-GDPR-004
+    description: "Data portability right requires structured, machine-readable export of subscriber personal data"
+    applicable_pii_categories: [msisdn, email, name, address, date_of_birth]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 36

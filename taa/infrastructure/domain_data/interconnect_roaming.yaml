@@ -1,7 +1,7 @@
 domain: interconnect_roaming
 tables:
   - name: interconnect_cdr
-    description: "Interconnect call detail records"
+    description: "Interconnect call detail records for inter-operator traffic"
     columns:
       - name: record_id
         type: STRING
@@ -21,6 +21,18 @@ tables:
       - name: called_number
         type: STRING
         description: "Called party number"
+      - name: trunk_group
+        type: STRING
+        description: "Trunk group identifier carrying the call"
+      - name: poi_code
+        type: STRING
+        description: "Point of interconnection code"
+      - name: interconnect_type
+        type: STRING
+        description: "Interconnect routing type (local/national/international/transit)"
+      - name: service_type
+        type: STRING
+        description: "Service type of the record (voice/sms/mms)"
       - name: event_date
         type: DATE
         description: "Event date"
@@ -31,6 +43,18 @@ tables:
       - name: duration_seconds
         type: INT64
         description: "Duration in seconds"
+      - name: termination_rate
+        type: NUMERIC
+        description: "Per-minute termination rate applied"
+      - name: origination_rate
+        type: NUMERIC
+        description: "Per-minute origination rate applied"
+      - name: billing_increment_seconds
+        type: INT64
+        description: "Billing increment granularity in seconds (e.g. 1, 6, 30, 60)"
+      - name: minimum_duration_seconds
+        type: INT64
+        description: "Minimum billable duration in seconds"
       - name: rated_amount
         type: NUMERIC
         description: "Rated interconnect amount"
@@ -40,9 +64,24 @@ tables:
       - name: currency
         type: STRING
         description: "Settlement currency"
+      - name: file_sequence
+        type: STRING
+        description: "Source CDR file sequence number"
+      - name: batch_id
+        type: STRING
+        description: "Processing batch identifier"
+      - name: dispute_flag
+        type: BOOLEAN
+        description: "Flag indicating whether this record is under dispute"
+      - name: reconciliation_status
+        type: STRING
+        description: "Reconciliation status (matched/unmatched/disputed/resolved)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
 
   - name: roaming_event
-    description: "Roaming usage events (TAP/RAP)"
+    description: "Roaming usage events from TAP/RAP file processing"
     columns:
       - name: event_id
         type: STRING
@@ -54,12 +93,25 @@ tables:
       - name: msisdn
         type: STRING
         description: "Roaming MSISDN"
+      - name: imsi
+        type: STRING
+        description: "International Mobile Subscriber Identity"
+      - name: home_network
+        type: STRING
+        description: "Home PLMN code of the subscriber"
       - name: visited_network
         type: STRING
         description: "Visited PLMN code"
+      - name: roaming_type
+        type: STRING
+        description: "Roaming direction (inbound/outbound)"
+        nullable: false
       - name: event_type
         type: STRING
         description: "Event type (voice/data/sms)"
+      - name: service_type
+        type: STRING
+        description: "Granular service type (mo_voice/mt_voice/mo_sms/mt_sms/gprs)"
       - name: event_date
         type: DATE
         description: "Event date"
@@ -73,9 +125,247 @@ tables:
       - name: bytes_transferred
         type: INT64
         description: "Data bytes transferred"
+      - name: tap_file_id
+        type: STRING
+        description: "Source TAP file identifier"
+      - name: rap_file_id
+        type: STRING
+        description: "Associated RAP (Return Accounts Procedure) file identifier"
       - name: tap_amount
         type: NUMERIC
-        description: "TAP charge amount"
+        description: "TAP charge amount in SDR or local currency"
+      - name: exchange_rate
+        type: NUMERIC
+        description: "Exchange rate applied for currency conversion"
+      - name: home_currency_amount
+        type: NUMERIC
+        description: "Charge amount converted to home currency"
+      - name: tax_amount
+        type: NUMERIC
+        description: "Tax amount applicable to the roaming event"
+      - name: inter_operator_tariff
+        type: NUMERIC
+        description: "Inter-operator tariff rate applied"
+      - name: discount_applied
+        type: NUMERIC
+        description: "Discount amount applied based on roaming agreement tiers"
       - name: currency
         type: STRING
         description: "TAP currency"
+      - name: tap_version
+        type: STRING
+        description: "TAP specification version (e.g. TAP3.12)"
+      - name: error_code
+        type: STRING
+        description: "RAP error code if the record was rejected"
+      - name: reconciliation_status
+        type: STRING
+        description: "Reconciliation status (matched/unmatched/rejected/resolved)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: roaming_agreement
+    description: "Roaming agreements with partner operators defining IOT rates and terms"
+    columns:
+      - name: agreement_id
+        type: STRING
+        description: "Unique roaming agreement identifier"
+        nullable: false
+      - name: home_operator
+        type: STRING
+        description: "Home operator PLMN code"
+        nullable: false
+      - name: partner_operator
+        type: STRING
+        description: "Partner operator PLMN code"
+        nullable: false
+      - name: agreement_type
+        type: STRING
+        description: "Agreement type (bilateral/unilateral/hubbing)"
+        nullable: false
+      - name: effective_date
+        type: DATE
+        description: "Agreement effective date"
+        nullable: false
+      - name: expiry_date
+        type: DATE
+        description: "Agreement expiry date"
+      - name: iot_rate_voice
+        type: NUMERIC
+        description: "Inter-operator tariff rate for voice per minute"
+      - name: iot_rate_data_per_mb
+        type: NUMERIC
+        description: "Inter-operator tariff rate for data per MB"
+      - name: iot_rate_sms
+        type: NUMERIC
+        description: "Inter-operator tariff rate per SMS"
+      - name: currency
+        type: STRING
+        description: "IOT rate currency (often SDR)"
+      - name: discount_tier
+        type: STRING
+        description: "Volume-based discount tier applied (tier_1/tier_2/tier_3)"
+      - name: volume_commitment
+        type: NUMERIC
+        description: "Committed traffic volume for discount eligibility"
+      - name: settlement_frequency
+        type: STRING
+        description: "Settlement frequency (monthly/quarterly/annually)"
+      - name: auto_renew
+        type: BOOLEAN
+        description: "Flag indicating whether the agreement auto-renews"
+      - name: status
+        type: STRING
+        description: "Agreement status (active/pending/expired/terminated)"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: interconnect_invoice
+    description: "Interconnect invoices for partner operator billing and settlement"
+    columns:
+      - name: invoice_id
+        type: STRING
+        description: "Unique invoice identifier"
+        nullable: false
+      - name: partner_operator
+        type: STRING
+        description: "Partner operator code"
+        nullable: false
+      - name: direction
+        type: STRING
+        description: "Invoice direction (payable/receivable)"
+        nullable: false
+      - name: invoice_period_start
+        type: DATE
+        description: "Start of the invoiced billing period"
+        nullable: false
+      - name: invoice_period_end
+        type: DATE
+        description: "End of the invoiced billing period"
+        nullable: false
+      - name: total_minutes
+        type: NUMERIC
+        description: "Total interconnect minutes in the invoice period"
+      - name: total_amount
+        type: NUMERIC
+        description: "Total invoice amount before tax"
+      - name: tax_amount
+        type: NUMERIC
+        description: "Tax amount on the invoice"
+      - name: currency
+        type: STRING
+        description: "Invoice currency"
+      - name: invoice_date
+        type: DATE
+        description: "Date the invoice was issued"
+        nullable: false
+      - name: due_date
+        type: DATE
+        description: "Invoice payment due date"
+      - name: payment_status
+        type: STRING
+        description: "Payment status (pending/paid/overdue/disputed)"
+      - name: dispute_amount
+        type: NUMERIC
+        description: "Amount under dispute on this invoice"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: tap_file
+    description: "TAP file metadata for roaming data exchange tracking"
+    columns:
+      - name: file_id
+        type: STRING
+        description: "Unique TAP file identifier"
+        nullable: false
+      - name: file_name
+        type: STRING
+        description: "TAP file name"
+        nullable: false
+      - name: tap_version
+        type: STRING
+        description: "TAP specification version (e.g. TAP3.12)"
+      - name: sender_operator
+        type: STRING
+        description: "Sending operator PLMN code"
+        nullable: false
+      - name: recipient_operator
+        type: STRING
+        description: "Receiving operator PLMN code"
+        nullable: false
+      - name: file_sequence
+        type: STRING
+        description: "File sequence number within the exchange"
+      - name: record_count
+        type: INT64
+        description: "Total number of CDR records in the file"
+      - name: total_charge
+        type: NUMERIC
+        description: "Total charge amount across all records in the file"
+      - name: currency
+        type: STRING
+        description: "Currency of the total charge"
+      - name: file_date
+        type: DATE
+        description: "Date the file was generated"
+      - name: received_date
+        type: DATE
+        description: "Date the file was received by the recipient"
+      - name: processing_status
+        type: STRING
+        description: "File processing status (received/validated/loaded/rejected/reprocessed)"
+      - name: error_count
+        type: INT64
+        description: "Number of records with errors in the file"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: settlement_record
+    description: "Financial settlement records between operators for interconnect and roaming"
+    columns:
+      - name: settlement_id
+        type: STRING
+        description: "Unique settlement record identifier"
+        nullable: false
+      - name: partner_operator
+        type: STRING
+        description: "Partner operator code"
+        nullable: false
+      - name: settlement_period
+        type: STRING
+        description: "Settlement period identifier (e.g. 2025-Q1, 2025-03)"
+        nullable: false
+      - name: direction
+        type: STRING
+        description: "Settlement direction (payable/receivable)"
+        nullable: false
+      - name: gross_amount
+        type: NUMERIC
+        description: "Gross settlement amount before adjustments"
+      - name: adjustments
+        type: NUMERIC
+        description: "Adjustment amount (credits, dispute resolutions, corrections)"
+      - name: net_amount
+        type: NUMERIC
+        description: "Net settlement amount after adjustments"
+      - name: currency
+        type: STRING
+        description: "Settlement currency"
+      - name: settlement_date
+        type: DATE
+        description: "Date the settlement was executed"
+      - name: payment_reference
+        type: STRING
+        description: "Bank payment or wire transfer reference"
+      - name: status
+        type: STRING
+        description: "Settlement status (pending/completed/partial/disputed)"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"

@@ -1,7 +1,7 @@
 domain: network_inventory
 tables:
   - name: network_element
-    description: "Network element inventory"
+    description: "Network element inventory with hardware and management details"
     columns:
       - name: element_id
         type: STRING
@@ -12,11 +12,23 @@ tables:
         description: "Element name"
       - name: element_type
         type: STRING
-        description: "Element type (BTS/NodeB/eNodeB/gNodeB)"
+        description: "Element type (BTS/NodeB/eNodeB/gNodeB/switch/router/core)"
         nullable: false
       - name: vendor
         type: STRING
         description: "Equipment vendor"
+      - name: model_number
+        type: STRING
+        description: "Equipment model number"
+      - name: firmware_version
+        type: STRING
+        description: "Current firmware version installed on the element"
+      - name: hardware_version
+        type: STRING
+        description: "Hardware revision version"
+      - name: serial_number
+        type: STRING
+        description: "Equipment serial number"
       - name: region
         type: STRING
         description: "Network region"
@@ -26,19 +38,53 @@ tables:
       - name: longitude
         type: FLOAT64
         description: "Site longitude"
+      - name: ip_address
+        type: STRING
+        description: "Primary IP address of the element"
+      - name: management_ip
+        type: STRING
+        description: "Management plane IP address for OAM access"
+      - name: parent_element_id
+        type: STRING
+        description: "Reference to parent element in the network hierarchy"
+      - name: rack_position
+        type: STRING
+        description: "Physical rack position identifier (e.g. rack-3/shelf-2/slot-5)"
       - name: capacity
         type: INT64
-        description: "Element capacity"
+        description: "Element capacity (subscribers or throughput depending on type)"
+      - name: installation_date
+        type: DATE
+        description: "Date the element was installed and commissioned"
+      - name: last_maintenance_date
+        type: DATE
+        description: "Date of last preventive or corrective maintenance"
+      - name: maintenance_window
+        type: STRING
+        description: "Preferred maintenance window (e.g. SUN_02-06)"
+      - name: power_source
+        type: STRING
+        description: "Primary power source type (grid/solar/generator/hybrid)"
+      - name: backup_power
+        type: STRING
+        description: "Backup power type (battery/generator/none)"
       - name: status
         type: STRING
-        description: "Element status (active/planned/decommissioned)"
+        description: "Element status (active/planned/under_maintenance/decommissioned)"
+        nullable: false
       - name: snapshot_date
         type: DATE
         description: "Inventory snapshot date"
         nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last update timestamp"
 
   - name: cell_site
-    description: "Cell site configuration"
+    description: "Cell site configuration with antenna and RF parameters"
     columns:
       - name: site_id
         type: STRING
@@ -61,9 +107,54 @@ tables:
       - name: frequency_band
         type: STRING
         description: "Frequency band"
+      - name: spectrum_band_mhz
+        type: INT64
+        description: "Spectrum band center frequency in MHz"
+      - name: bandwidth_mhz
+        type: INT64
+        description: "Channel bandwidth in MHz"
+      - name: sector_count
+        type: INT64
+        description: "Number of sectors at the site"
       - name: azimuth
         type: INT64
         description: "Antenna azimuth in degrees"
+      - name: height_meters
+        type: FLOAT64
+        description: "Antenna height above ground in meters"
+      - name: tilt_electrical
+        type: FLOAT64
+        description: "Electrical antenna downtilt in degrees"
+      - name: tilt_mechanical
+        type: FLOAT64
+        description: "Mechanical antenna downtilt in degrees"
+      - name: power_watts
+        type: FLOAT64
+        description: "Transmit power in watts"
+      - name: antenna_model
+        type: STRING
+        description: "Antenna model identifier"
+      - name: antenna_gain_dbi
+        type: FLOAT64
+        description: "Antenna gain in dBi"
+      - name: coverage_radius_km
+        type: FLOAT64
+        description: "Estimated coverage radius in kilometers"
+      - name: indoor_outdoor
+        type: STRING
+        description: "Deployment type (indoor/outdoor/mixed)"
+      - name: morphology
+        type: STRING
+        description: "Site morphology classification (urban/suburban/rural)"
+      - name: max_throughput_mbps
+        type: FLOAT64
+        description: "Maximum theoretical throughput in Mbps"
+      - name: carrier_aggregation
+        type: STRING
+        description: "Carrier aggregation configuration (e.g. 2CA/3CA/none)"
+      - name: mimo_config
+        type: STRING
+        description: "MIMO configuration (2x2/4x4/8x8/massive)"
       - name: latitude
         type: FLOAT64
         description: "Cell latitude"
@@ -74,3 +165,209 @@ tables:
         type: DATE
         description: "Snapshot date"
         nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: network_link
+    description: "Network transport links connecting network elements"
+    columns:
+      - name: link_id
+        type: STRING
+        description: "Unique link identifier"
+        nullable: false
+      - name: source_element_id
+        type: STRING
+        description: "Source network element identifier"
+        nullable: false
+      - name: target_element_id
+        type: STRING
+        description: "Target network element identifier"
+        nullable: false
+      - name: link_type
+        type: STRING
+        description: "Link technology type (fiber/microwave/satellite/copper)"
+        nullable: false
+      - name: capacity_gbps
+        type: FLOAT64
+        description: "Link capacity in Gbps"
+      - name: utilization_pct
+        type: FLOAT64
+        description: "Current link utilization percentage"
+      - name: latency_ms
+        type: FLOAT64
+        description: "Link latency in milliseconds"
+      - name: distance_km
+        type: FLOAT64
+        description: "Physical link distance in kilometers"
+      - name: redundancy_group
+        type: STRING
+        description: "Redundancy group identifier for failover grouping"
+      - name: protection_type
+        type: STRING
+        description: "Protection scheme (1+1/ring/mesh/unprotected)"
+      - name: status
+        type: STRING
+        description: "Link status (active/standby/failed/planned)"
+        nullable: false
+      - name: commissioned_date
+        type: DATE
+        description: "Date the link was commissioned"
+      - name: snapshot_date
+        type: DATE
+        description: "Snapshot date"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+
+  - name: spectrum_allocation
+    description: "Spectrum license allocations by frequency band and region"
+    columns:
+      - name: allocation_id
+        type: STRING
+        description: "Unique spectrum allocation identifier"
+        nullable: false
+      - name: license_id
+        type: STRING
+        description: "Regulatory spectrum license identifier"
+        nullable: false
+      - name: frequency_band
+        type: STRING
+        description: "Frequency band name (e.g. n78, Band 3, 700MHz)"
+      - name: bandwidth_mhz
+        type: INT64
+        description: "Allocated bandwidth in MHz"
+      - name: technology
+        type: STRING
+        description: "Deployed technology (4G/5G_NSA/5G_SA)"
+      - name: region
+        type: STRING
+        description: "Geographic region of the allocation"
+      - name: start_frequency_mhz
+        type: FLOAT64
+        description: "Start frequency of the allocated block in MHz"
+      - name: end_frequency_mhz
+        type: FLOAT64
+        description: "End frequency of the allocated block in MHz"
+      - name: license_expiry
+        type: DATE
+        description: "License expiration date"
+      - name: annual_fee
+        type: NUMERIC
+        description: "Annual spectrum license fee"
+      - name: status
+        type: STRING
+        description: "Allocation status (active/pending/expired/returned)"
+        nullable: false
+      - name: snapshot_date
+        type: DATE
+        description: "Snapshot date"
+        nullable: false
+
+  - name: network_outage
+    description: "Network outage records for planned and unplanned service disruptions"
+    columns:
+      - name: outage_id
+        type: STRING
+        description: "Unique outage identifier"
+        nullable: false
+      - name: element_id
+        type: STRING
+        description: "Affected network element identifier"
+      - name: site_id
+        type: STRING
+        description: "Affected site identifier"
+      - name: outage_type
+        type: STRING
+        description: "Outage type (planned/unplanned)"
+        nullable: false
+      - name: severity
+        type: STRING
+        description: "Outage severity (critical/major/minor)"
+        nullable: false
+      - name: start_time
+        type: TIMESTAMP
+        description: "Outage start timestamp"
+        nullable: false
+      - name: end_time
+        type: TIMESTAMP
+        description: "Outage end timestamp (null if ongoing)"
+      - name: duration_minutes
+        type: INT64
+        description: "Total outage duration in minutes"
+      - name: affected_subscribers
+        type: INT64
+        description: "Estimated number of affected subscribers"
+      - name: root_cause
+        type: STRING
+        description: "Root cause classification (hardware/software/power/transmission/external)"
+      - name: resolution_description
+        type: STRING
+        description: "Description of the resolution action taken"
+      - name: ticket_id
+        type: STRING
+        description: "Associated trouble ticket identifier"
+      - name: reported_by
+        type: STRING
+        description: "Person or system that reported the outage"
+      - name: snapshot_date
+        type: DATE
+        description: "Snapshot date"
+        nullable: false
+
+  - name: network_kpi
+    description: "Network KPI measurements by element, site, and time period"
+    columns:
+      - name: kpi_id
+        type: STRING
+        description: "Unique KPI measurement identifier"
+        nullable: false
+      - name: element_id
+        type: STRING
+        description: "Network element identifier"
+      - name: site_id
+        type: STRING
+        description: "Site identifier"
+      - name: kpi_date
+        type: DATE
+        description: "KPI measurement date"
+        nullable: false
+      - name: kpi_hour
+        type: INT64
+        description: "KPI measurement hour (0-23)"
+      - name: technology
+        type: STRING
+        description: "Technology (2G/3G/4G/5G)"
+      - name: kpi_name
+        type: STRING
+        description: "KPI metric name (e.g. accessibility, retainability, throughput, availability)"
+        nullable: false
+      - name: kpi_value
+        type: FLOAT64
+        description: "KPI measured value"
+      - name: kpi_unit
+        type: STRING
+        description: "Unit of measure (percent/mbps/ms/count)"
+      - name: threshold_warning
+        type: FLOAT64
+        description: "Warning threshold value"
+      - name: threshold_critical
+        type: FLOAT64
+        description: "Critical threshold value"
+      - name: breach_flag
+        type: BOOLEAN
+        description: "Flag indicating whether the KPI breached the critical threshold"
+      - name: subscriber_count
+        type: INT64
+        description: "Number of active subscribers at measurement time"
+      - name: traffic_volume_gb
+        type: FLOAT64
+        description: "Traffic volume in GB during the measurement period"
+      - name: snapshot_date
+        type: DATE
+        description: "Snapshot date"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"

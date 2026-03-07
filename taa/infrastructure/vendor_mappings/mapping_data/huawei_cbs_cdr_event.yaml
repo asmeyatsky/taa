@@ -1,27 +1,292 @@
 vendor: huawei_cbs
 domain: cdr_event
 mappings:
+  # --- CBS_CDR: Voice CDR records ---
   - vendor_table: CBS_CDR
     vendor_field: SERIAL_NO
     canonical_table: voice_cdr
     canonical_field: cdr_id
     transformation: "CAST(SERIAL_NO AS STRING)"
-    confidence: 0.95
+    confidence: 0.99
+
   - vendor_table: CBS_CDR
     vendor_field: CALLING_PARTY
     canonical_table: voice_cdr
-    canonical_field: msisdn
-    transformation: ""
-    confidence: 0.90
+    canonical_field: calling_number
+    transformation: "TRIM(CALLING_PARTY)"
+    confidence: 0.98
+
   - vendor_table: CBS_CDR
     vendor_field: CALLED_PARTY
     canonical_table: voice_cdr
     canonical_field: called_number
-    transformation: ""
-    confidence: 0.90
+    transformation: "TRIM(CALLED_PARTY)"
+    confidence: 0.98
+
+  - vendor_table: CBS_CDR
+    vendor_field: SUBSCRIBER_KEY
+    canonical_table: voice_cdr
+    canonical_field: subscriber_id
+    transformation: "CAST(SUBSCRIBER_KEY AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: CBS_CDR
+    vendor_field: PRIMARY_IDENTITY
+    canonical_table: voice_cdr
+    canonical_field: msisdn
+    transformation: "TRIM(PRIMARY_IDENTITY)"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: START_TIME
+    canonical_table: voice_cdr
+    canonical_field: event_start_time
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', START_TIME)"
+    confidence: 0.97
+
   - vendor_table: CBS_CDR
     vendor_field: START_TIME
     canonical_table: voice_cdr
     canonical_field: event_date
-    transformation: "DATE(START_TIME)"
+    transformation: "DATE(PARSE_TIMESTAMP('%Y%m%d%H%M%S', START_TIME))"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: END_TIME
+    canonical_table: voice_cdr
+    canonical_field: event_end_time
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', END_TIME)"
+    confidence: 0.97
+
+  - vendor_table: CBS_CDR
+    vendor_field: DURATION
+    canonical_table: voice_cdr
+    canonical_field: duration_seconds
+    transformation: "CAST(DURATION AS INT64)"
+    confidence: 0.98
+
+  - vendor_table: CBS_CDR
+    vendor_field: CALL_TYPE
+    canonical_table: voice_cdr
+    canonical_field: call_type
+    transformation: "CASE CALL_TYPE WHEN 1 THEN 'local' WHEN 2 THEN 'national' WHEN 3 THEN 'international' WHEN 4 THEN 'roaming' WHEN 5 THEN 'toll_free' ELSE 'other' END"
     confidence: 0.90
+
+  - vendor_table: CBS_CDR
+    vendor_field: CALL_DIRECTION
+    canonical_table: voice_cdr
+    canonical_field: direction
+    transformation: "CASE CALL_DIRECTION WHEN 1 THEN 'originating' WHEN 2 THEN 'terminating' WHEN 3 THEN 'forwarding' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: CHARGE_AMT
+    canonical_table: voice_cdr
+    canonical_field: rated_amount
+    transformation: "CAST(CHARGE_AMT AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: DISCOUNT_AMT
+    canonical_table: voice_cdr
+    canonical_field: discount_amount
+    transformation: "CAST(DISCOUNT_AMT AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: CBS_CDR
+    vendor_field: BALANCE_TYPE
+    canonical_table: voice_cdr
+    canonical_field: balance_type
+    transformation: "CASE BALANCE_TYPE WHEN 1 THEN 'main' WHEN 2 THEN 'bonus' WHEN 3 THEN 'free_units' ELSE 'other' END"
+    confidence: 0.85
+
+  - vendor_table: CBS_CDR
+    vendor_field: DEBIT_AMT
+    canonical_table: voice_cdr
+    canonical_field: debit_amount
+    transformation: "CAST(DEBIT_AMT AS NUMERIC) / 100"
+    confidence: 0.92
+
+  - vendor_table: CBS_CDR
+    vendor_field: RESULT_CD
+    canonical_table: voice_cdr
+    canonical_field: result_code
+    transformation: "CASE RESULT_CD WHEN 0 THEN 'success' WHEN 1 THEN 'busy' WHEN 2 THEN 'no_answer' WHEN 3 THEN 'failed' ELSE 'unknown' END"
+    confidence: 0.88
+
+  - vendor_table: CBS_CDR
+    vendor_field: SERVICE_TYPE
+    canonical_table: voice_cdr
+    canonical_field: service_type
+    transformation: "CASE SERVICE_TYPE WHEN 1 THEN 'voice' WHEN 2 THEN 'sms' WHEN 3 THEN 'data' WHEN 4 THEN 'mms' WHEN 5 THEN 'vas' ELSE 'other' END"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: ROAMING_FLAG
+    canonical_table: voice_cdr
+    canonical_field: is_roaming
+    transformation: "CASE ROAMING_FLAG WHEN 1 THEN TRUE ELSE FALSE END"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: VISIT_NETWORK
+    canonical_table: voice_cdr
+    canonical_field: roaming_network
+    transformation: "TRIM(VISIT_NETWORK)"
+    confidence: 0.85
+
+  - vendor_table: CBS_CDR
+    vendor_field: CELL_ID
+    canonical_table: voice_cdr
+    canonical_field: cell_id
+    transformation: "TRIM(CELL_ID)"
+    confidence: 0.90
+
+  - vendor_table: CBS_CDR
+    vendor_field: LAC
+    canonical_table: voice_cdr
+    canonical_field: location_area_code
+    transformation: "TRIM(LAC)"
+    confidence: 0.88
+
+  - vendor_table: CBS_CDR
+    vendor_field: TARIFF_PLAN_ID
+    canonical_table: voice_cdr
+    canonical_field: tariff_plan_id
+    transformation: "CAST(TARIFF_PLAN_ID AS STRING)"
+    confidence: 0.90
+
+  - vendor_table: CBS_CDR
+    vendor_field: RATING_GROUP
+    canonical_table: voice_cdr
+    canonical_field: rating_group
+    transformation: "CAST(RATING_GROUP AS STRING)"
+    confidence: 0.85
+
+  - vendor_table: CBS_CDR
+    vendor_field: ACCT_KEY
+    canonical_table: voice_cdr
+    canonical_field: account_id
+    transformation: "CAST(ACCT_KEY AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: IMSI
+    canonical_table: voice_cdr
+    canonical_field: imsi
+    transformation: "TRIM(IMSI)"
+    confidence: 0.97
+
+  - vendor_table: CBS_CDR
+    vendor_field: IMEI
+    canonical_table: voice_cdr
+    canonical_field: imei
+    transformation: "TRIM(IMEI)"
+    confidence: 0.97
+
+  # --- CBS_CDR: Data usage records ---
+  - vendor_table: CBS_CDR
+    vendor_field: TOTAL_VOLUME
+    canonical_table: data_cdr
+    canonical_field: total_bytes
+    transformation: "CAST(TOTAL_VOLUME AS INT64)"
+    confidence: 0.92
+
+  - vendor_table: CBS_CDR
+    vendor_field: UPLINK_VOLUME
+    canonical_table: data_cdr
+    canonical_field: upload_bytes
+    transformation: "CAST(UPLINK_VOLUME AS INT64)"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: DOWNLINK_VOLUME
+    canonical_table: data_cdr
+    canonical_field: download_bytes
+    transformation: "CAST(DOWNLINK_VOLUME AS INT64)"
+    confidence: 0.95
+
+  - vendor_table: CBS_CDR
+    vendor_field: APN_ID
+    canonical_table: data_cdr
+    canonical_field: access_point_name
+    transformation: "TRIM(APN_ID)"
+    confidence: 0.90
+
+  - vendor_table: CBS_CDR
+    vendor_field: RAT_TYPE
+    canonical_table: data_cdr
+    canonical_field: radio_access_type
+    transformation: "CASE RAT_TYPE WHEN 1 THEN '2G' WHEN 2 THEN '3G' WHEN 3 THEN '4G' WHEN 4 THEN '5G' ELSE 'unknown' END"
+    confidence: 0.88
+
+  # --- CBS_CDR: SMS records ---
+  - vendor_table: CBS_CDR
+    vendor_field: SMS_CONTENT_TYPE
+    canonical_table: sms_cdr
+    canonical_field: content_type
+    transformation: "CASE SMS_CONTENT_TYPE WHEN 0 THEN 'text' WHEN 1 THEN 'binary' WHEN 2 THEN 'wap_push' ELSE 'text' END"
+    confidence: 0.80
+
+  - vendor_table: CBS_CDR
+    vendor_field: ORIGINATING_SMSC
+    canonical_table: sms_cdr
+    canonical_field: smsc_address
+    transformation: "TRIM(ORIGINATING_SMSC)"
+    confidence: 0.85
+
+  - vendor_table: CBS_CDR
+    vendor_field: MSG_STATUS
+    canonical_table: sms_cdr
+    canonical_field: delivery_status
+    transformation: "CASE MSG_STATUS WHEN 0 THEN 'delivered' WHEN 1 THEN 'pending' WHEN 2 THEN 'failed' WHEN 3 THEN 'expired' ELSE 'unknown' END"
+    confidence: 0.85
+
+  - vendor_table: CBS_CDR
+    vendor_field: CHARGE_TYPE
+    canonical_table: voice_cdr
+    canonical_field: charge_type
+    transformation: "CASE CHARGE_TYPE WHEN 0 THEN 'free' WHEN 1 THEN 'flat' WHEN 2 THEN 'per_unit' WHEN 3 THEN 'tiered' ELSE 'other' END"
+    confidence: 0.82
+
+  - vendor_table: CBS_CDR
+    vendor_field: TAX_AMT
+    canonical_table: voice_cdr
+    canonical_field: tax_amount
+    transformation: "CAST(TAX_AMT AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: CBS_CDR
+    vendor_field: ORIGINAL_DURATION
+    canonical_table: voice_cdr
+    canonical_field: original_duration_seconds
+    transformation: "CAST(ORIGINAL_DURATION AS INT64)"
+    confidence: 0.88
+
+  - vendor_table: CBS_CDR
+    vendor_field: FREE_UNIT_USED
+    canonical_table: voice_cdr
+    canonical_field: free_units_consumed
+    transformation: "CAST(FREE_UNIT_USED AS INT64)"
+    confidence: 0.85
+
+  - vendor_table: CBS_CDR
+    vendor_field: CDR_SOURCE
+    canonical_table: voice_cdr
+    canonical_field: source_system
+    transformation: "TRIM(CDR_SOURCE)"
+    confidence: 0.80
+
+  - vendor_table: CBS_CDR
+    vendor_field: RECORD_TYPE
+    canonical_table: voice_cdr
+    canonical_field: record_type
+    transformation: "CASE RECORD_TYPE WHEN 0 THEN 'normal' WHEN 1 THEN 'partial' WHEN 2 THEN 'continuation' ELSE 'normal' END"
+    confidence: 0.82
+
+  - vendor_table: CBS_CDR
+    vendor_field: CURRENCY_CD
+    canonical_table: voice_cdr
+    canonical_field: currency_code
+    transformation: "CASE CURRENCY_CD WHEN 1 THEN 'USD' WHEN 2 THEN 'EUR' WHEN 3 THEN 'GBP' WHEN 4 THEN 'SAR' ELSE 'USD' END"
+    confidence: 0.85

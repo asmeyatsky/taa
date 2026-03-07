@@ -1,0 +1,318 @@
+vendor: amdocs
+domain: interconnect_roaming
+mappings:
+  # ============================================================
+  # interconnect_cdr mappings (from IC_CDR)
+  # ============================================================
+  - vendor_table: IC_CDR
+    vendor_field: IC_CDR_SEQ
+    canonical_table: interconnect_cdr
+    canonical_field: interconnect_cdr_id
+    transformation: "CAST(IC_CDR_SEQ AS STRING)"
+    confidence: 0.99
+  - vendor_table: IC_CDR
+    vendor_field: ORIG_TRUNK_ID
+    canonical_table: interconnect_cdr
+    canonical_field: originating_trunk
+    transformation: "TRIM(ORIG_TRUNK_ID)"
+    confidence: 0.90
+  - vendor_table: IC_CDR
+    vendor_field: TERM_TRUNK_ID
+    canonical_table: interconnect_cdr
+    canonical_field: terminating_trunk
+    transformation: "TRIM(TERM_TRUNK_ID)"
+    confidence: 0.90
+  - vendor_table: IC_CDR
+    vendor_field: A_PARTY_NUM
+    canonical_table: interconnect_cdr
+    canonical_field: calling_number
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: IC_CDR
+    vendor_field: B_PARTY_NUM
+    canonical_table: interconnect_cdr
+    canonical_field: called_number
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: IC_CDR
+    vendor_field: CALL_START_DT
+    canonical_table: interconnect_cdr
+    canonical_field: event_timestamp
+    transformation: "TIMESTAMP(CALL_START_DT)"
+    confidence: 0.95
+  - vendor_table: IC_CDR
+    vendor_field: CALL_DURATION
+    canonical_table: interconnect_cdr
+    canonical_field: duration_seconds
+    transformation: "CAST(CALL_DURATION AS INT64)"
+    confidence: 0.95
+  - vendor_table: IC_CDR
+    vendor_field: IC_DIR_CD
+    canonical_table: interconnect_cdr
+    canonical_field: direction
+    transformation: "CASE IC_DIR_CD WHEN 'IN' THEN 'inbound' WHEN 'OUT' THEN 'outbound' WHEN 'TRN' THEN 'transit' END"
+    confidence: 0.90
+  - vendor_table: IC_CDR
+    vendor_field: IC_PARTNER_CD
+    canonical_table: interconnect_cdr
+    canonical_field: partner_operator_code
+    transformation: "UPPER(TRIM(IC_PARTNER_CD))"
+    confidence: 0.90
+  - vendor_table: IC_CDR
+    vendor_field: IC_RATE
+    canonical_table: interconnect_cdr
+    canonical_field: interconnect_rate
+    transformation: "CAST(IC_RATE AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: IC_CDR
+    vendor_field: IC_CHARGE_AMT
+    canonical_table: interconnect_cdr
+    canonical_field: interconnect_charge
+    transformation: "CAST(IC_CHARGE_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: IC_CDR
+    vendor_field: SVC_TYPE_CD
+    canonical_table: interconnect_cdr
+    canonical_field: service_type
+    transformation: "CASE SVC_TYPE_CD WHEN 'VOI' THEN 'voice' WHEN 'SMS' THEN 'sms' WHEN 'MMS' THEN 'mms' WHEN 'DAT' THEN 'data' END"
+    confidence: 0.85
+  - vendor_table: IC_CDR
+    vendor_field: SETTLEMENT_CD
+    canonical_table: interconnect_cdr
+    canonical_field: settlement_status
+    transformation: "CASE SETTLEMENT_CD WHEN 'P' THEN 'pending' WHEN 'S' THEN 'settled' WHEN 'D' THEN 'disputed' WHEN 'R' THEN 'reconciled' END"
+    confidence: 0.85
+  - vendor_table: IC_CDR
+    vendor_field: POI_CD
+    canonical_table: interconnect_cdr
+    canonical_field: point_of_interconnect
+    transformation: "TRIM(POI_CD)"
+    confidence: 0.85
+
+  # ============================================================
+  # roaming_event mappings (from IC_ROAMING_EVENT)
+  # ============================================================
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: ROAM_EVENT_ID
+    canonical_table: roaming_event
+    canonical_field: roaming_event_id
+    transformation: "CAST(ROAM_EVENT_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: MSISDN
+    canonical_table: roaming_event
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.99
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: IMSI_NUM
+    canonical_table: roaming_event
+    canonical_field: imsi
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: HOME_PLMN_ID
+    canonical_table: roaming_event
+    canonical_field: home_network_id
+    transformation: "TRIM(HOME_PLMN_ID)"
+    confidence: 0.90
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: VISIT_PLMN_ID
+    canonical_table: roaming_event
+    canonical_field: visited_network_id
+    transformation: "TRIM(VISIT_PLMN_ID)"
+    confidence: 0.90
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: VISIT_COUNTRY_CD
+    canonical_table: roaming_event
+    canonical_field: visited_country
+    transformation: "UPPER(VISIT_COUNTRY_CD)"
+    confidence: 0.95
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: EVENT_DT
+    canonical_table: roaming_event
+    canonical_field: event_timestamp
+    transformation: "TIMESTAMP(EVENT_DT)"
+    confidence: 0.95
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: EVENT_TYPE_CD
+    canonical_table: roaming_event
+    canonical_field: event_type
+    transformation: "CASE EVENT_TYPE_CD WHEN 'VO' THEN 'voice_outgoing' WHEN 'VI' THEN 'voice_incoming' WHEN 'SO' THEN 'sms_outgoing' WHEN 'SI' THEN 'sms_incoming' WHEN 'DA' THEN 'data' END"
+    confidence: 0.85
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: DURATION_SEC
+    canonical_table: roaming_event
+    canonical_field: duration_seconds
+    transformation: "CAST(DURATION_SEC AS INT64)"
+    confidence: 0.90
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: DATA_VOL_BYTES
+    canonical_table: roaming_event
+    canonical_field: data_volume_bytes
+    transformation: "CAST(DATA_VOL_BYTES AS INT64)"
+    confidence: 0.90
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: HOME_RATED_AMT
+    canonical_table: roaming_event
+    canonical_field: retail_charge
+    transformation: "CAST(HOME_RATED_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: IOT_RATE
+    canonical_table: roaming_event
+    canonical_field: iot_rate
+    transformation: "CAST(IOT_RATE AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: IOT_CHARGE_AMT
+    canonical_table: roaming_event
+    canonical_field: iot_charge
+    transformation: "CAST(IOT_CHARGE_AMT AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: TAP_FILE_ID
+    canonical_table: roaming_event
+    canonical_field: tap_file_reference
+    transformation: "TRIM(TAP_FILE_ID)"
+    confidence: 0.80
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: ROAM_TYPE_CD
+    canonical_table: roaming_event
+    canonical_field: roaming_type
+    transformation: "CASE ROAM_TYPE_CD WHEN 'INT' THEN 'international' WHEN 'NAT' THEN 'national' WHEN 'REG' THEN 'regional' END"
+    confidence: 0.85
+  - vendor_table: IC_ROAMING_EVENT
+    vendor_field: CAMEL_FLG
+    canonical_table: roaming_event
+    canonical_field: is_camel_roaming
+    transformation: "CASE CAMEL_FLG WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE END"
+    confidence: 0.80
+
+  # ============================================================
+  # roaming_agreement mappings (from IC_AGREEMENT)
+  # ============================================================
+  - vendor_table: IC_AGREEMENT
+    vendor_field: AGREE_ID
+    canonical_table: roaming_agreement
+    canonical_field: agreement_id
+    transformation: "CAST(AGREE_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: IC_AGREEMENT
+    vendor_field: PARTNER_OPER_CD
+    canonical_table: roaming_agreement
+    canonical_field: partner_operator_code
+    transformation: "UPPER(TRIM(PARTNER_OPER_CD))"
+    confidence: 0.95
+  - vendor_table: IC_AGREEMENT
+    vendor_field: PARTNER_OPER_NM
+    canonical_table: roaming_agreement
+    canonical_field: partner_operator_name
+    transformation: "TRIM(PARTNER_OPER_NM)"
+    confidence: 0.90
+  - vendor_table: IC_AGREEMENT
+    vendor_field: PARTNER_COUNTRY_CD
+    canonical_table: roaming_agreement
+    canonical_field: partner_country
+    transformation: "UPPER(PARTNER_COUNTRY_CD)"
+    confidence: 0.95
+  - vendor_table: IC_AGREEMENT
+    vendor_field: AGREE_TYPE_CD
+    canonical_table: roaming_agreement
+    canonical_field: agreement_type
+    transformation: "CASE AGREE_TYPE_CD WHEN 'BIL' THEN 'bilateral' WHEN 'UNI' THEN 'unilateral' WHEN 'HUB' THEN 'hubbing' END"
+    confidence: 0.85
+  - vendor_table: IC_AGREEMENT
+    vendor_field: AGREE_START_DT
+    canonical_table: roaming_agreement
+    canonical_field: start_date
+    transformation: "PARSE_DATE('%Y%m%d', AGREE_START_DT)"
+    confidence: 0.95
+  - vendor_table: IC_AGREEMENT
+    vendor_field: AGREE_END_DT
+    canonical_table: roaming_agreement
+    canonical_field: end_date
+    transformation: "PARSE_DATE('%Y%m%d', AGREE_END_DT)"
+    confidence: 0.95
+  - vendor_table: IC_AGREEMENT
+    vendor_field: AGREE_STATUS
+    canonical_table: roaming_agreement
+    canonical_field: status
+    transformation: "CASE AGREE_STATUS WHEN 'A' THEN 'active' WHEN 'E' THEN 'expired' WHEN 'S' THEN 'suspended' WHEN 'N' THEN 'negotiation' END"
+    confidence: 0.90
+  - vendor_table: IC_AGREEMENT
+    vendor_field: TADIG_CD
+    canonical_table: roaming_agreement
+    canonical_field: tadig_code
+    transformation: "UPPER(TRIM(TADIG_CD))"
+    confidence: 0.90
+
+  # ============================================================
+  # settlement mappings (from IC_SETTLEMENT)
+  # ============================================================
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: SETTLE_ID
+    canonical_table: settlement
+    canonical_field: settlement_id
+    transformation: "CAST(SETTLE_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: AGREE_ID
+    canonical_table: settlement
+    canonical_field: agreement_id
+    transformation: "CAST(AGREE_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: SETTLE_PERIOD_START
+    canonical_table: settlement
+    canonical_field: period_start_date
+    transformation: "PARSE_DATE('%Y%m%d', SETTLE_PERIOD_START)"
+    confidence: 0.95
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: SETTLE_PERIOD_END
+    canonical_table: settlement
+    canonical_field: period_end_date
+    transformation: "PARSE_DATE('%Y%m%d', SETTLE_PERIOD_END)"
+    confidence: 0.95
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: RECEIVABLE_AMT
+    canonical_table: settlement
+    canonical_field: receivable_amount
+    transformation: "CAST(RECEIVABLE_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: PAYABLE_AMT
+    canonical_table: settlement
+    canonical_field: payable_amount
+    transformation: "CAST(PAYABLE_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: NET_SETTLE_AMT
+    canonical_table: settlement
+    canonical_field: net_settlement_amount
+    transformation: "COALESCE(CAST(NET_SETTLE_AMT AS NUMERIC), CAST(RECEIVABLE_AMT AS NUMERIC) - CAST(PAYABLE_AMT AS NUMERIC))"
+    confidence: 0.90
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: CURRENCY_CD
+    canonical_table: settlement
+    canonical_field: currency_code
+    transformation: "UPPER(CURRENCY_CD)"
+    confidence: 0.95
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: SETTLE_STATUS
+    canonical_table: settlement
+    canonical_field: status
+    transformation: "CASE SETTLE_STATUS WHEN 'P' THEN 'pending' WHEN 'I' THEN 'invoiced' WHEN 'S' THEN 'settled' WHEN 'D' THEN 'disputed' WHEN 'R' THEN 'reconciled' END"
+    confidence: 0.90
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: DISPUTE_AMT
+    canonical_table: settlement
+    canonical_field: dispute_amount
+    transformation: "COALESCE(CAST(DISPUTE_AMT AS NUMERIC), 0)"
+    confidence: 0.85
+  - vendor_table: IC_SETTLEMENT
+    vendor_field: SETTLE_DT
+    canonical_table: settlement
+    canonical_field: settlement_date
+    transformation: "PARSE_DATE('%Y%m%d', SETTLE_DT)"
+    confidence: 0.90

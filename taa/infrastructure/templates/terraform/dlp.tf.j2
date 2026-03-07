@@ -1,0 +1,36 @@
+{# Data Loss Prevention configuration #}
+resource "google_data_loss_prevention_inspect_template" "taa_pii_template" {
+  parent       = "projects/${var.project_id}/locations/{{ region }}"
+  display_name = "TAA PII Detection Template"
+  description  = "Detects telco subscriber PII data"
+
+  inspect_config {
+    info_types {
+      name = "PHONE_NUMBER"
+    }
+    info_types {
+      name = "EMAIL_ADDRESS"
+    }
+    info_types {
+      name = "PERSON_NAME"
+    }
+    info_types {
+      name = "STREET_ADDRESS"
+    }
+    info_types {
+      name = "DATE_OF_BIRTH"
+    }
+    info_types {
+      name = "IP_ADDRESS"
+    }
+    info_types {
+      name = "IMEI_HARDWARE_ID"
+    }
+
+    min_likelihood = "LIKELY"
+
+    limits {
+      max_findings_per_request = 1000
+    }
+  }
+}

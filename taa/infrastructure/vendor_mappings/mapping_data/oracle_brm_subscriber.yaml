@@ -1,33 +1,359 @@
 vendor: oracle_brm
 domain: subscriber
 mappings:
+  # --- ACCOUNT_T: Core account/subscriber identity ---
   - vendor_table: ACCOUNT_T
     vendor_field: POID_ID0
     canonical_table: subscriber_profile
     canonical_field: subscriber_id
     transformation: "CAST(POID_ID0 AS STRING)"
-    confidence: 0.90
-  - vendor_table: SERVICE_T
-    vendor_field: LOGIN
+    confidence: 0.98
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: ACCOUNT_NO
     canonical_table: subscriber_profile
-    canonical_field: msisdn
-    transformation: ""
-    confidence: 0.85
-  - vendor_table: NAMEINFO_T
-    vendor_field: FIRST_NAME
-    canonical_table: subscriber_profile
-    canonical_field: first_name
-    transformation: ""
-    confidence: 0.95
-  - vendor_table: NAMEINFO_T
-    vendor_field: LAST_NAME
-    canonical_table: subscriber_profile
-    canonical_field: last_name
-    transformation: ""
-    confidence: 0.95
+    canonical_field: account_number
+    transformation: "TRIM(ACCOUNT_NO)"
+    confidence: 0.97
+
   - vendor_table: ACCOUNT_T
     vendor_field: STATUS
     canonical_table: subscriber_profile
     canonical_field: status
-    transformation: "CASE STATUS WHEN 10100 THEN 'active' WHEN 10102 THEN 'suspended' WHEN 10103 THEN 'terminated' END"
+    transformation: "CASE STATUS WHEN 10100 THEN 'active' WHEN 10102 THEN 'suspended' WHEN 10103 THEN 'terminated' WHEN 10104 THEN 'pre_active' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: CREATED_T
+    canonical_table: subscriber_profile
+    canonical_field: activation_date
+    transformation: "TIMESTAMP_SECONDS(CREATED_T)"
+    confidence: 0.97
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: MOD_T
+    canonical_table: subscriber_profile
+    canonical_field: last_modified_date
+    transformation: "TIMESTAMP_SECONDS(MOD_T)"
+    confidence: 0.95
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: CURRENCY
+    canonical_table: subscriber_profile
+    canonical_field: currency_code
+    transformation: "CASE CURRENCY WHEN 840 THEN 'USD' WHEN 978 THEN 'EUR' WHEN 826 THEN 'GBP' WHEN 682 THEN 'SAR' ELSE CAST(CURRENCY AS STRING) END"
     confidence: 0.90
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: AAC_SOURCE
+    canonical_table: subscriber_profile
+    canonical_field: acquisition_channel
+    transformation: "TRIM(AAC_SOURCE)"
+    confidence: 0.75
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: BRAND_OBJ_ID0
+    canonical_table: subscriber_profile
+    canonical_field: brand
+    transformation: "CAST(BRAND_OBJ_ID0 AS STRING)"
+    confidence: 0.80
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: GROUP_OBJ_ID0
+    canonical_table: subscriber_profile
+    canonical_field: account_group_id
+    transformation: "CAST(GROUP_OBJ_ID0 AS STRING)"
+    confidence: 0.82
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: BUSINESS_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: customer_segment
+    transformation: "CASE BUSINESS_TYPE WHEN 1 THEN 'consumer' WHEN 2 THEN 'business' WHEN 3 THEN 'enterprise' WHEN 4 THEN 'wholesale' ELSE 'consumer' END"
+    confidence: 0.85
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: LOCALE
+    canonical_table: subscriber_profile
+    canonical_field: preferred_language
+    transformation: "COALESCE(TRIM(LOCALE), 'en_US')"
+    confidence: 0.85
+
+  # --- SERVICE_T: Service (MSISDN) details ---
+  - vendor_table: SERVICE_T
+    vendor_field: POID_ID0
+    canonical_table: subscriber_service
+    canonical_field: service_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: SERVICE_T
+    vendor_field: LOGIN
+    canonical_table: subscriber_profile
+    canonical_field: msisdn
+    transformation: "TRIM(LOGIN)"
+    confidence: 0.95
+
+  - vendor_table: SERVICE_T
+    vendor_field: ACCOUNT_OBJ_ID0
+    canonical_table: subscriber_service
+    canonical_field: account_id
+    transformation: "CAST(ACCOUNT_OBJ_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: SERVICE_T
+    vendor_field: STATUS
+    canonical_table: subscriber_service
+    canonical_field: service_status
+    transformation: "CASE STATUS WHEN 10100 THEN 'active' WHEN 10102 THEN 'suspended' WHEN 10103 THEN 'terminated' WHEN 10104 THEN 'pre_active' ELSE 'unknown' END"
+    confidence: 0.95
+
+  - vendor_table: SERVICE_T
+    vendor_field: CREATED_T
+    canonical_table: subscriber_service
+    canonical_field: service_activation_date
+    transformation: "TIMESTAMP_SECONDS(CREATED_T)"
+    confidence: 0.95
+
+  - vendor_table: SERVICE_T
+    vendor_field: POID_TYPE
+    canonical_table: subscriber_service
+    canonical_field: service_type
+    transformation: "CASE WHEN POID_TYPE LIKE '%/gsm%' THEN 'gsm' WHEN POID_TYPE LIKE '%/data%' THEN 'data' WHEN POID_TYPE LIKE '%/sms%' THEN 'sms' WHEN POID_TYPE LIKE '%/telco%' THEN 'voice' ELSE 'other' END"
+    confidence: 0.88
+
+  - vendor_table: SERVICE_T
+    vendor_field: PASSWD_CLEAR
+    canonical_table: subscriber_service
+    canonical_field: sim_serial
+    transformation: "TRIM(PASSWD_CLEAR)"
+    confidence: 0.65
+
+  # --- NAMEINFO_T: Contact and personal details ---
+  - vendor_table: NAMEINFO_T
+    vendor_field: FIRST_NAME
+    canonical_table: subscriber_profile
+    canonical_field: first_name
+    transformation: "TRIM(FIRST_NAME)"
+    confidence: 0.99
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: LAST_NAME
+    canonical_table: subscriber_profile
+    canonical_field: last_name
+    transformation: "TRIM(LAST_NAME)"
+    confidence: 0.99
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: MIDDLE_NAME
+    canonical_table: subscriber_profile
+    canonical_field: middle_name
+    transformation: "TRIM(MIDDLE_NAME)"
+    confidence: 0.97
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: TITLE
+    canonical_table: subscriber_profile
+    canonical_field: title
+    transformation: "TRIM(TITLE)"
+    confidence: 0.95
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: SALUTATION
+    canonical_table: subscriber_profile
+    canonical_field: salutation
+    transformation: "TRIM(SALUTATION)"
+    confidence: 0.95
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: EMAIL_ADDR
+    canonical_table: subscriber_profile
+    canonical_field: email
+    transformation: "LOWER(TRIM(EMAIL_ADDR))"
+    confidence: 0.97
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: ADDRESS
+    canonical_table: subscriber_address
+    canonical_field: address_line_1
+    transformation: "TRIM(ADDRESS)"
+    confidence: 0.95
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: CITY
+    canonical_table: subscriber_address
+    canonical_field: city
+    transformation: "TRIM(CITY)"
+    confidence: 0.98
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: STATE
+    canonical_table: subscriber_address
+    canonical_field: state
+    transformation: "TRIM(STATE)"
+    confidence: 0.98
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: ZIP
+    canonical_table: subscriber_address
+    canonical_field: postal_code
+    transformation: "TRIM(ZIP)"
+    confidence: 0.97
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: COUNTRY
+    canonical_table: subscriber_address
+    canonical_field: country_code
+    transformation: "TRIM(COUNTRY)"
+    confidence: 0.97
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: PHONE
+    canonical_table: subscriber_profile
+    canonical_field: contact_phone
+    transformation: "TRIM(PHONE)"
+    confidence: 0.90
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: COMPANY
+    canonical_table: subscriber_profile
+    canonical_field: company_name
+    transformation: "TRIM(COMPANY)"
+    confidence: 0.90
+
+  # --- PAYINFO_T: Payment information ---
+  - vendor_table: PAYINFO_T
+    vendor_field: POID_ID0
+    canonical_table: subscriber_payment_info
+    canonical_field: payment_info_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: PAYINFO_T
+    vendor_field: PAY_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: payment_method
+    transformation: "CASE PAY_TYPE WHEN 10000 THEN 'prepaid' WHEN 10001 THEN 'invoice' WHEN 10002 THEN 'credit_card' WHEN 10003 THEN 'direct_debit' WHEN 10005 THEN 'voucher' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: PAYINFO_T
+    vendor_field: ACCOUNT_OBJ_ID0
+    canonical_table: subscriber_payment_info
+    canonical_field: account_id
+    transformation: "CAST(ACCOUNT_OBJ_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: PAYINFO_T
+    vendor_field: INV_TYPE
+    canonical_table: subscriber_payment_info
+    canonical_field: invoice_type
+    transformation: "CASE INV_TYPE WHEN 0 THEN 'detail' WHEN 1 THEN 'summary' ELSE 'detail' END"
+    confidence: 0.85
+
+  # --- BAL_GRP_T / SUB_BAL_T: Balance and wallet ---
+  - vendor_table: BAL_GRP_T
+    vendor_field: POID_ID0
+    canonical_table: subscriber_balance
+    canonical_field: balance_group_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: BAL_GRP_T
+    vendor_field: ACCOUNT_OBJ_ID0
+    canonical_table: subscriber_balance
+    canonical_field: account_id
+    transformation: "CAST(ACCOUNT_OBJ_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: SUB_BAL_T
+    vendor_field: CURRENT_BAL
+    canonical_table: subscriber_balance
+    canonical_field: current_balance
+    transformation: "CAST(CURRENT_BAL AS NUMERIC) / 100000"
+    confidence: 0.95
+
+  - vendor_table: SUB_BAL_T
+    vendor_field: VALID_FROM
+    canonical_table: subscriber_balance
+    canonical_field: effective_date
+    transformation: "TIMESTAMP_SECONDS(VALID_FROM)"
+    confidence: 0.95
+
+  - vendor_table: SUB_BAL_T
+    vendor_field: VALID_TO
+    canonical_table: subscriber_balance
+    canonical_field: expiry_date
+    transformation: "TIMESTAMP_SECONDS(VALID_TO)"
+    confidence: 0.95
+
+  - vendor_table: SUB_BAL_T
+    vendor_field: ELEMENT_ID
+    canonical_table: subscriber_balance
+    canonical_field: balance_type
+    transformation: "CASE ELEMENT_ID WHEN 840 THEN 'monetary_usd' WHEN 978 THEN 'monetary_eur' WHEN 1000001 THEN 'free_minutes' WHEN 1000002 THEN 'free_sms' WHEN 1000003 THEN 'free_data_mb' ELSE CAST(ELEMENT_ID AS STRING) END"
+    confidence: 0.85
+
+  # --- DEVICE_T: Device information ---
+  - vendor_table: DEVICE_T
+    vendor_field: DEVICE_ID
+    canonical_table: subscriber_profile
+    canonical_field: imei
+    transformation: "TRIM(DEVICE_ID)"
+    confidence: 0.80
+
+  - vendor_table: DEVICE_T
+    vendor_field: POID_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: device_type
+    transformation: "CASE WHEN POID_TYPE LIKE '%/sim%' THEN 'sim' WHEN POID_TYPE LIKE '%/handset%' THEN 'handset' WHEN POID_TYPE LIKE '%/modem%' THEN 'modem' ELSE 'other' END"
+    confidence: 0.82
+
+  - vendor_table: DEVICE_T
+    vendor_field: STATE_ID
+    canonical_table: subscriber_profile
+    canonical_field: device_status
+    transformation: "CASE STATE_ID WHEN 0 THEN 'new' WHEN 1 THEN 'assigned' WHEN 2 THEN 'released' WHEN 3 THEN 'lost' ELSE 'unknown' END"
+    confidence: 0.78
+
+  # --- PROFILE_T: Extended subscriber profile ---
+  - vendor_table: PROFILE_T
+    vendor_field: POID_ID0
+    canonical_table: subscriber_profile
+    canonical_field: profile_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.90
+
+  - vendor_table: PROFILE_T
+    vendor_field: CUSTOMER_SEGMENT
+    canonical_table: subscriber_profile
+    canonical_field: customer_segment
+    transformation: "COALESCE(TRIM(CUSTOMER_SEGMENT), 'consumer')"
+    confidence: 0.85
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: POID_DB
+    canonical_table: subscriber_profile
+    canonical_field: database_number
+    transformation: "CAST(POID_DB AS STRING)"
+    confidence: 0.60
+
+  - vendor_table: SERVICE_T
+    vendor_field: EFFECTIVE_T
+    canonical_table: subscriber_service
+    canonical_field: effective_date
+    transformation: "TIMESTAMP_SECONDS(EFFECTIVE_T)"
+    confidence: 0.90
+
+  - vendor_table: ACCOUNT_T
+    vendor_field: LAST_STATUS_T
+    canonical_table: subscriber_profile
+    canonical_field: last_status_change_date
+    transformation: "TIMESTAMP_SECONDS(LAST_STATUS_T)"
+    confidence: 0.90
+
+  - vendor_table: NAMEINFO_T
+    vendor_field: CONTACT_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: contact_type
+    transformation: "TRIM(CONTACT_TYPE)"
+    confidence: 0.88

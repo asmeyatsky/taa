@@ -1,97 +1,766 @@
 domain: subscriber
+description: >
+  Production-grade TMF SID-aligned telco subscriber data model.
+  Covers party, account, device, balance, consent, segmentation,
+  address, contract, and notification-preference entities for a
+  full Customer Domain / Resource Domain representation.
+
 tables:
+  # ──────────────────────────────────────────────────────────────
+  # 1. subscriber_profile  (30+ columns)
+  # ──────────────────────────────────────────────────────────────
   - name: subscriber_profile
-    description: "Core subscriber profile and lifecycle data"
+    description: >
+      Core subscriber identity, lifecycle, and demographic record.
+      Maps to TMF SID Individual / PartyRole with extended KYC,
+      geo-location, device, and value-management attributes.
     columns:
       - name: subscriber_id
         type: STRING
-        description: "Unique subscriber identifier"
+        description: "Unique subscriber identifier (primary key)"
+        nullable: false
+      - name: account_id
+        type: STRING
+        description: "Parent billing/service account identifier (FK to account)"
         nullable: false
       - name: msisdn
         type: STRING
-        description: "Mobile subscriber ISDN number"
+        description: "Mobile Subscriber ISDN Number (E.164 format)"
         nullable: false
       - name: imsi
         type: STRING
         description: "International Mobile Subscriber Identity"
         nullable: false
-      - name: imei
+      - name: sim_serial
         type: STRING
-        description: "International Mobile Equipment Identity"
+        description: "SIM card serial number (ICCID, up to 20 digits)"
+        nullable: false
       - name: first_name
         type: STRING
-        description: "Subscriber first name"
+        description: "Subscriber given / first name"
       - name: last_name
         type: STRING
-        description: "Subscriber last name"
+        description: "Subscriber family / last name"
       - name: email
         type: STRING
-        description: "Contact email address"
+        description: "Primary contact email address"
+      - name: phone_secondary
+        type: STRING
+        description: "Secondary / alternative contact phone number"
       - name: national_id
         type: STRING
-        description: "National identification number"
+        description: "Government-issued national identification number"
       - name: date_of_birth
         type: DATE
         description: "Subscriber date of birth"
-      - name: address
+      - name: gender
         type: STRING
-        description: "Subscriber address"
-      - name: activation_date
-        type: DATE
-        description: "Service activation date"
-        nullable: false
-      - name: status
+        description: "Gender (male/female/non_binary/undisclosed)"
+      - name: nationality
         type: STRING
-        description: "Subscriber status (active/suspended/terminated)"
-        nullable: false
+        description: "ISO 3166-1 alpha-2 nationality code"
+      - name: city
+        type: STRING
+        description: "City of primary residence"
+      - name: state
+        type: STRING
+        description: "State or province of primary residence"
+      - name: country
+        type: STRING
+        description: "ISO 3166-1 alpha-2 country code"
+      - name: postal_code
+        type: STRING
+        description: "Postal / ZIP code of primary residence"
+      - name: geo_latitude
+        type: FLOAT64
+        description: "Latitude of primary residence (WGS 84)"
+      - name: geo_longitude
+        type: FLOAT64
+        description: "Longitude of primary residence (WGS 84)"
       - name: subscriber_type
         type: STRING
-        description: "Postpaid or prepaid"
-      - name: credit_class
+        description: "Billing relationship type (postpaid/prepaid/hybrid)"
+        nullable: false
+      - name: subscriber_segment
         type: STRING
-        description: "Credit classification"
+        description: "High-level commercial segment (mass/gold/platinum/vip)"
+      - name: lifecycle_stage
+        type: STRING
+        description: "Customer lifecycle stage (prospect/active/dormant/churned)"
+        nullable: false
+      - name: credit_limit
+        type: NUMERIC
+        description: "Approved credit limit in local currency"
+      - name: credit_score
+        type: FLOAT64
+        description: "Internal or bureau credit score (0-1000 scale)"
+      - name: preferred_channel
+        type: STRING
+        description: "Preferred contact channel (sms/email/push/call/whatsapp)"
       - name: language_preference
         type: STRING
-        description: "Preferred language"
+        description: "Preferred language (ISO 639-1 code)"
+      - name: kyc_status
+        type: STRING
+        description: "Know-Your-Customer verification status (pending/verified/rejected/expired)"
+      - name: kyc_date
+        type: DATE
+        description: "Date KYC verification was last completed or refreshed"
+      - name: sim_type
+        type: STRING
+        description: "SIM form factor (physical/eSIM/iSIM)"
+      - name: network_type
+        type: STRING
+        description: "Highest registered network technology (2G/3G/4G/5G)"
+      - name: handset_model
+        type: STRING
+        description: "Current primary handset model name"
+      - name: os_type
+        type: STRING
+        description: "Operating system of primary device (android/ios/other)"
+      - name: activation_date
+        type: DATE
+        description: "Date the subscriber line was first activated"
+        nullable: false
+      - name: last_activity_date
+        type: DATE
+        description: "Date of most recent network or billing activity"
+      - name: churn_risk_score
+        type: FLOAT64
+        description: "Predictive churn probability (0.0 - 1.0)"
+      - name: lifetime_value
+        type: NUMERIC
+        description: "Estimated customer lifetime value in local currency"
+      - name: referral_code
+        type: STRING
+        description: "Referral or promo code used at acquisition"
+      - name: dealer_code
+        type: STRING
+        description: "Acquiring dealer / point-of-sale code"
+      - name: credit_class
+        type: STRING
+        description: "Credit classification tier (A/B/C/D/E)"
+      - name: status
+        type: STRING
+        description: "Subscriber line status (active/suspended/barred/terminated)"
+        nullable: false
       - name: created_at
         type: TIMESTAMP
-        description: "Record creation timestamp"
+        description: "Record creation timestamp (UTC)"
         nullable: false
       - name: updated_at
         type: TIMESTAMP
-        description: "Record last update timestamp"
+        description: "Record last-update timestamp (UTC)"
 
-  - name: subscriber_contract
-    description: "Subscriber contract and commitment details"
+  # ──────────────────────────────────────────────────────────────
+  # 2. account  (20+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: account
+    description: >
+      Billing and service account entity aligned with TMF SID
+      BillingAccount / PartyAccount. Supports individual, corporate,
+      and dealer account types with full billing configuration.
     columns:
-      - name: contract_id
+      - name: account_id
         type: STRING
-        description: "Unique contract identifier"
+        description: "Unique account identifier (primary key)"
+        nullable: false
+      - name: account_name
+        type: STRING
+        description: "Human-readable account name or label"
+        nullable: false
+      - name: account_type
+        type: STRING
+        description: "Account classification (individual/corporate/dealer)"
+        nullable: false
+      - name: billing_type
+        type: STRING
+        description: "Billing model (postpaid/prepaid/hybrid)"
+        nullable: false
+      - name: parent_account_id
+        type: STRING
+        description: "Parent account for hierarchical structures (self-ref FK)"
+      - name: payment_method
+        type: STRING
+        description: "Default payment method (credit_card/bank_transfer/direct_debit/mobile_money/cash)"
+      - name: payment_term_days
+        type: INT64
+        description: "Net payment terms in days (e.g. 30)"
+      - name: credit_class
+        type: STRING
+        description: "Credit classification tier (A/B/C/D/E)"
+      - name: credit_limit
+        type: NUMERIC
+        description: "Total credit limit for the account in local currency"
+      - name: currency
+        type: STRING
+        description: "ISO 4217 currency code (e.g. USD, EUR, KES)"
+        nullable: false
+      - name: tax_exemption_flag
+        type: BOOLEAN
+        description: "Whether the account is exempt from tax"
+      - name: tax_id
+        type: STRING
+        description: "Tax identification number (VAT/TIN/GST)"
+      - name: bill_cycle_day
+        type: INT64
+        description: "Day of month the billing cycle closes (1-28)"
+      - name: bill_format
+        type: STRING
+        description: "Preferred bill delivery format (paper/email/sms/portal)"
+      - name: bill_language
+        type: STRING
+        description: "Language for bill rendering (ISO 639-1 code)"
+      - name: dunning_level
+        type: INT64
+        description: "Current dunning escalation level (0 = none)"
+      - name: collection_status
+        type: STRING
+        description: "Collections status (current/overdue/in_collections/written_off)"
+      - name: outstanding_balance
+        type: NUMERIC
+        description: "Total outstanding balance on the account"
+      - name: last_payment_date
+        type: DATE
+        description: "Date of the most recent payment received"
+      - name: last_payment_amount
+        type: NUMERIC
+        description: "Amount of the most recent payment received"
+      - name: account_status
+        type: STRING
+        description: "Account lifecycle status (active/suspended/closed)"
+        nullable: false
+      - name: responsible_party_id
+        type: STRING
+        description: "Party (individual/org) legally responsible for the account"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last-update timestamp (UTC)"
+
+  # ──────────────────────────────────────────────────────────────
+  # 3. account_hierarchy  (10+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: account_hierarchy
+    description: >
+      Captures parent-child and sponsor relationships between
+      accounts. Supports multi-level corporate structures, cost-centre
+      allocation, and spending controls per TMF SID PartyRole hierarchy.
+    columns:
+      - name: hierarchy_id
+        type: STRING
+        description: "Unique hierarchy link identifier (primary key)"
+        nullable: false
+      - name: parent_account_id
+        type: STRING
+        description: "Account ID of the parent node (FK to account)"
+        nullable: false
+      - name: child_account_id
+        type: STRING
+        description: "Account ID of the child node (FK to account)"
+        nullable: false
+      - name: hierarchy_level
+        type: INT64
+        description: "Depth level in the hierarchy tree (root = 0)"
+        nullable: false
+      - name: relationship_type
+        type: STRING
+        description: "Nature of the link (parent/child/sponsor/reseller)"
+        nullable: false
+      - name: cost_center
+        type: STRING
+        description: "Cost-centre or department code for allocation"
+      - name: spending_limit
+        type: NUMERIC
+        description: "Maximum spend allowed for the child under this link"
+      - name: spending_limit_currency
+        type: STRING
+        description: "ISO 4217 currency code for the spending limit"
+      - name: effective_date
+        type: DATE
+        description: "Date this hierarchy link becomes effective"
+        nullable: false
+      - name: expiry_date
+        type: DATE
+        description: "Date this hierarchy link expires (null = indefinite)"
+      - name: status
+        type: STRING
+        description: "Link status (active/inactive/pending)"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+
+  # ──────────────────────────────────────────────────────────────
+  # 4. subscriber_address  (15+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: subscriber_address
+    description: >
+      Multi-type postal and geo-coded addresses linked to a
+      subscriber. Supports home, work, billing, and installation
+      addresses with validation tracking per TMF SID GeographicAddress.
+    columns:
+      - name: address_id
+        type: STRING
+        description: "Unique address record identifier (primary key)"
         nullable: false
       - name: subscriber_id
         type: STRING
-        description: "Reference to subscriber"
+        description: "Owning subscriber identifier (FK to subscriber_profile)"
+        nullable: false
+      - name: address_type
+        type: STRING
+        description: "Address purpose (home/work/billing/installation/shipping)"
+        nullable: false
+      - name: address_line_1
+        type: STRING
+        description: "Primary street address line"
+        nullable: false
+      - name: address_line_2
+        type: STRING
+        description: "Secondary address line (apt, suite, floor, etc.)"
+      - name: address_line_3
+        type: STRING
+        description: "Tertiary address line (building name, landmark)"
+      - name: city
+        type: STRING
+        description: "City or locality name"
+        nullable: false
+      - name: state_province
+        type: STRING
+        description: "State, province, or region"
+      - name: postal_code
+        type: STRING
+        description: "Postal or ZIP code"
+      - name: country_code
+        type: STRING
+        description: "ISO 3166-1 alpha-2 country code"
+        nullable: false
+      - name: geo_latitude
+        type: FLOAT64
+        description: "Geocoded latitude (WGS 84)"
+      - name: geo_longitude
+        type: FLOAT64
+        description: "Geocoded longitude (WGS 84)"
+      - name: validated_flag
+        type: BOOLEAN
+        description: "Whether the address has been validated against a postal database"
+      - name: validation_date
+        type: DATE
+        description: "Date the address was last validated"
+      - name: validation_source
+        type: STRING
+        description: "Source system used for address validation"
+      - name: primary_flag
+        type: BOOLEAN
+        description: "Whether this is the subscriber's primary address"
+        nullable: false
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last-update timestamp (UTC)"
+
+  # ──────────────────────────────────────────────────────────────
+  # 5. subscriber_consent  (12+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: subscriber_consent
+    description: >
+      GDPR/PDPA/POPIA-compliant consent records. Tracks per-channel,
+      per-purpose consent with legal basis and jurisdiction, aligned
+      with TMF SID PrivacyProfile and TMF685 Privacy Management API.
+    columns:
+      - name: consent_id
+        type: STRING
+        description: "Unique consent record identifier (primary key)"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber granting consent (FK to subscriber_profile)"
+        nullable: false
+      - name: consent_type
+        type: STRING
+        description: "Purpose category (marketing/data_processing/third_party/profiling/location/analytics)"
+        nullable: false
+      - name: channel
+        type: STRING
+        description: "Communication channel for consent (sms/email/push/call/whatsapp/all)"
+        nullable: false
+      - name: consent_status
+        type: STRING
+        description: "Current status (granted/revoked/expired/pending)"
+        nullable: false
+      - name: consent_date
+        type: TIMESTAMP
+        description: "Timestamp when consent was granted"
+        nullable: false
+      - name: revocation_date
+        type: TIMESTAMP
+        description: "Timestamp when consent was revoked (null if active)"
+      - name: expiry_date
+        type: DATE
+        description: "Date consent automatically expires if not renewed"
+      - name: legal_basis
+        type: STRING
+        description: "Legal ground (consent/legitimate_interest/contract/legal_obligation/vital_interest/public_task)"
+        nullable: false
+      - name: data_controller
+        type: STRING
+        description: "Name or ID of the data controller entity"
+      - name: data_processor
+        type: STRING
+        description: "Name or ID of the third-party data processor, if any"
+      - name: jurisdiction
+        type: STRING
+        description: "Regulatory jurisdiction code (e.g. EU, KE, ZA, SG)"
+      - name: policy_version
+        type: STRING
+        description: "Version of the privacy policy under which consent was obtained"
+      - name: source
+        type: STRING
+        description: "Collection source (app/web/call_center/retail/sms)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+
+  # ──────────────────────────────────────────────────────────────
+  # 6. subscriber_device  (15+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: subscriber_device
+    description: >
+      Inventory of physical devices associated with a subscriber.
+      Tracks IMEI, make/model, capability flags, and lifecycle
+      status aligned with TMF SID PhysicalResource.
+    columns:
+      - name: device_id
+        type: STRING
+        description: "Unique device record identifier (primary key)"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber using the device (FK to subscriber_profile)"
+        nullable: false
+      - name: imei
+        type: STRING
+        description: "International Mobile Equipment Identity (15 digits)"
+        nullable: false
+      - name: imei_sv
+        type: STRING
+        description: "IMEI Software Version (16 digits)"
+      - name: tac_code
+        type: STRING
+        description: "Type Allocation Code (first 8 digits of IMEI)"
+      - name: device_make
+        type: STRING
+        description: "Device manufacturer (e.g. Samsung, Apple, Huawei)"
+      - name: device_model
+        type: STRING
+        description: "Device model name or number"
+      - name: device_type
+        type: STRING
+        description: "Device category (handset/tablet/router/wearable/iot/modem)"
+        nullable: false
+      - name: os_name
+        type: STRING
+        description: "Operating system name (android/ios/harmonyos/linux/other)"
+      - name: os_version
+        type: STRING
+        description: "Operating system version string"
+      - name: is_5g_capable
+        type: BOOLEAN
+        description: "Whether the device supports 5G NR"
+      - name: is_volte_capable
+        type: BOOLEAN
+        description: "Whether the device supports VoLTE"
+      - name: is_esim_capable
+        type: BOOLEAN
+        description: "Whether the device supports eSIM provisioning"
+      - name: device_status
+        type: STRING
+        description: "Current device status (active/lost/stolen/returned/decommissioned)"
+        nullable: false
+      - name: activation_date
+        type: DATE
+        description: "Date the device was first activated on the network"
+        nullable: false
+      - name: deactivation_date
+        type: DATE
+        description: "Date the device was deactivated or removed"
+      - name: sim_slot
+        type: INT64
+        description: "SIM slot number the subscriber line occupies (1/2)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+
+  # ──────────────────────────────────────────────────────────────
+  # 7. subscriber_balance  (12+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: subscriber_balance
+    description: >
+      Real-time and periodic balance buckets for monetary, data,
+      voice, SMS, and bonus wallets. Aligned with TMF SID
+      BucketBalance and TMF654 Prepay Balance Management API.
+    columns:
+      - name: balance_id
+        type: STRING
+        description: "Unique balance bucket identifier (primary key)"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Owning subscriber (FK to subscriber_profile)"
+        nullable: false
+      - name: account_id
+        type: STRING
+        description: "Associated billing account (FK to account)"
+        nullable: false
+      - name: balance_type
+        type: STRING
+        description: "Bucket type (monetary/data/voice/sms/bonus/loyalty_points)"
+        nullable: false
+      - name: balance_name
+        type: STRING
+        description: "Human-readable bucket name (e.g. Main Balance, Night Data)"
+      - name: current_value
+        type: NUMERIC
+        description: "Current remaining value in the bucket"
+        nullable: false
+      - name: initial_value
+        type: NUMERIC
+        description: "Original credited value when the bucket was provisioned"
+        nullable: false
+      - name: reserved_value
+        type: NUMERIC
+        description: "Value currently reserved/held for in-progress sessions"
+      - name: unit
+        type: STRING
+        description: "Unit of measure (currency/MB/GB/minutes/seconds/count/points)"
+        nullable: false
+      - name: effective_date
+        type: TIMESTAMP
+        description: "Timestamp from which the bucket is usable"
+        nullable: false
+      - name: expiry_date
+        type: TIMESTAMP
+        description: "Timestamp at which the bucket expires"
+      - name: auto_renew
+        type: BOOLEAN
+        description: "Whether the bucket auto-renews on expiry"
+      - name: priority
+        type: INT64
+        description: "Depletion priority (lower number consumed first)"
+      - name: last_updated
+        type: TIMESTAMP
+        description: "Timestamp of last balance mutation"
+        nullable: false
+
+  # ──────────────────────────────────────────────────────────────
+  # 8. subscriber_contract  (15+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: subscriber_contract
+    description: >
+      Subscriber contract, commitment, and commercial-term details.
+      Supports new, renewal, upgrade, and migration contracts with
+      early-termination and device-instalment references per
+      TMF SID ProductOfferingAgreement.
+    columns:
+      - name: contract_id
+        type: STRING
+        description: "Unique contract identifier (primary key)"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber bound by the contract (FK to subscriber_profile)"
+        nullable: false
+      - name: account_id
+        type: STRING
+        description: "Billing account for the contract (FK to account)"
         nullable: false
       - name: plan_id
         type: STRING
-        description: "Associated plan identifier"
+        description: "Commercial plan / product offering identifier"
+      - name: bundle_id
+        type: STRING
+        description: "Convergent bundle identifier (if part of a bundle)"
+      - name: contract_type
+        type: STRING
+        description: "Nature of the contract (new/renewal/upgrade/migration/win_back)"
+        nullable: false
       - name: start_date
         type: DATE
-        description: "Contract start date"
+        description: "Contract effective start date"
         nullable: false
       - name: end_date
         type: DATE
-        description: "Contract end date"
+        description: "Contract scheduled end date"
       - name: commitment_months
         type: INT64
-        description: "Contract commitment period in months"
+        description: "Minimum commitment period in months"
       - name: monthly_fee
         type: NUMERIC
-        description: "Monthly recurring fee"
+        description: "Monthly recurring charge in local currency"
+      - name: discount_pct
+        type: FLOAT64
+        description: "Percentage discount applied to standard rate (0-100)"
+      - name: early_termination_fee
+        type: NUMERIC
+        description: "Penalty fee for early contract termination"
+      - name: auto_renew_flag
+        type: BOOLEAN
+        description: "Whether the contract auto-renews at expiry"
+      - name: device_installment_plan_id
+        type: STRING
+        description: "Reference to device instalment / financing plan"
+      - name: remaining_installments
+        type: INT64
+        description: "Number of remaining device instalment payments"
+      - name: channel
+        type: STRING
+        description: "Sales channel through which the contract was signed (retail/online/call_center/dealer)"
       - name: status
         type: STRING
-        description: "Contract status"
+        description: "Contract status (draft/active/expired/terminated/cancelled)"
+        nullable: false
       - name: activation_date
         type: DATE
-        description: "Contract activation date"
+        description: "Date the contract was activated / services provisioned"
         nullable: false
+      - name: termination_date
+        type: DATE
+        description: "Date the contract was actually terminated (if applicable)"
+      - name: termination_reason
+        type: STRING
+        description: "Reason for termination (voluntary/involuntary/ported_out/fraud)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last-update timestamp (UTC)"
+
+  # ──────────────────────────────────────────────────────────────
+  # 9. subscriber_segment  (12+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: subscriber_segment
+    description: >
+      Analytic and ML-driven segmentation assignments for a
+      subscriber. Supports value-based, lifecycle, behavioural,
+      and demographic segments with scoring and temporal validity.
+    columns:
+      - name: segment_id
+        type: STRING
+        description: "Unique segment assignment identifier (primary key)"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber being segmented (FK to subscriber_profile)"
+        nullable: false
+      - name: segment_type
+        type: STRING
+        description: "Segmentation axis (value/lifecycle/behavioral/demographic/geographic/psychographic)"
+        nullable: false
+      - name: segment_name
+        type: STRING
+        description: "Human-readable segment label (e.g. High Value Roamer)"
+        nullable: false
+      - name: segment_code
+        type: STRING
+        description: "Machine-readable segment code"
+      - name: segment_value
+        type: STRING
+        description: "Assigned segment value or tier"
+      - name: score
+        type: FLOAT64
+        description: "Numeric score supporting the segment assignment (0-1000)"
+      - name: percentile_rank
+        type: FLOAT64
+        description: "Percentile rank within the segment population (0-100)"
+      - name: computation_date
+        type: DATE
+        description: "Date the segmentation model was last executed"
+        nullable: false
+      - name: model_version
+        type: STRING
+        description: "Version identifier of the segmentation model"
+      - name: model_name
+        type: STRING
+        description: "Name of the segmentation model or pipeline"
+      - name: valid_from
+        type: DATE
+        description: "Start of the validity window for this assignment"
+        nullable: false
+      - name: valid_to
+        type: DATE
+        description: "End of the validity window (null = until next refresh)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+
+  # ──────────────────────────────────────────────────────────────
+  # 10. subscriber_notification_preference  (10+ columns)
+  # ──────────────────────────────────────────────────────────────
+  - name: subscriber_notification_preference
+    description: >
+      Per-subscriber, per-topic notification preferences including
+      channel selection, thresholds, and quiet-hours configuration.
+      Supports billing alerts, usage warnings, promos, service
+      updates, and outage notices.
+    columns:
+      - name: preference_id
+        type: STRING
+        description: "Unique preference record identifier (primary key)"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber owning the preference (FK to subscriber_profile)"
+        nullable: false
+      - name: notification_type
+        type: STRING
+        description: "Notification category (billing/usage_alert/promotion/service/outage/fraud_alert/roaming)"
+        nullable: false
+      - name: channel
+        type: STRING
+        description: "Delivery channel (sms/email/push/whatsapp/ivr)"
+        nullable: false
+      - name: enabled
+        type: BOOLEAN
+        description: "Whether this notification is currently enabled"
+        nullable: false
+      - name: threshold_value
+        type: FLOAT64
+        description: "Trigger threshold value (e.g. 80 for 80 % usage)"
+      - name: threshold_unit
+        type: STRING
+        description: "Unit of the threshold (percent/MB/currency/minutes)"
+      - name: frequency
+        type: STRING
+        description: "Maximum send frequency (realtime/daily/weekly/monthly)"
+      - name: language
+        type: STRING
+        description: "Preferred language for notifications (ISO 639-1 code)"
+      - name: quiet_hours_start
+        type: STRING
+        description: "Start of quiet / do-not-disturb window (HH:MM, local time)"
+      - name: quiet_hours_end
+        type: STRING
+        description: "End of quiet / do-not-disturb window (HH:MM, local time)"
+      - name: timezone
+        type: STRING
+        description: "IANA timezone for quiet-hours evaluation (e.g. Africa/Nairobi)"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp (UTC)"
+        nullable: false
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last-update timestamp (UTC)"

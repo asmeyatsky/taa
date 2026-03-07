@@ -1,0 +1,37 @@
+{# Vertex AI workspace and notebook provisioning #}
+resource "google_notebooks_instance" "taa_notebook" {
+  name         = "taa-analytics-notebook"
+  location     = "{{ region }}-a"
+  machine_type = "n1-standard-4"
+
+  vm_image {
+    project      = "deeplearning-platform-release"
+    image_family = "tf-latest-gpu"
+  }
+
+  install_gpu_driver = false
+
+  service_account = google_service_account.notebook_sa.email
+
+  labels = {
+    managed_by = "taa"
+    purpose    = "analytics"
+  }
+}
+
+resource "google_service_account" "notebook_sa" {
+  account_id   = "taa-notebook-sa"
+  display_name = "TAA Notebook Service Account"
+}
+
+resource "google_project_iam_member" "notebook_bq" {
+  project = var.project_id
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.notebook_sa.email}"
+}
+
+resource "google_project_iam_member" "notebook_aiplatform" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = "serviceAccount:${google_service_account.notebook_sa.email}"
+}

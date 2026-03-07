@@ -1,6 +1,9 @@
 vendor: amdocs
 domain: subscriber
 mappings:
+  # ============================================================
+  # subscriber_profile mappings (from CM_SUBSCRIBER)
+  # ============================================================
   - vendor_table: CM_SUBSCRIBER
     vendor_field: SUB_ID
     canonical_table: subscriber_profile
@@ -20,6 +23,12 @@ mappings:
     transformation: ""
     confidence: 0.95
   - vendor_table: CM_SUBSCRIBER
+    vendor_field: ICCID
+    canonical_table: subscriber_profile
+    canonical_field: iccid
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
     vendor_field: FIRST_NM
     canonical_table: subscriber_profile
     canonical_field: first_name
@@ -32,10 +41,22 @@ mappings:
     transformation: "TRIM(LAST_NM)"
     confidence: 0.95
   - vendor_table: CM_SUBSCRIBER
+    vendor_field: MIDDLE_NM
+    canonical_table: subscriber_profile
+    canonical_field: middle_name
+    transformation: "TRIM(MIDDLE_NM)"
+    confidence: 0.90
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: FULL_NM
+    canonical_table: subscriber_profile
+    canonical_field: full_name
+    transformation: "TRIM(CONCAT(COALESCE(FIRST_NM, ''), ' ', COALESCE(LAST_NM, '')))"
+    confidence: 0.85
+  - vendor_table: CM_SUBSCRIBER
     vendor_field: EMAIL_ADDR
     canonical_table: subscriber_profile
     canonical_field: email
-    transformation: "LOWER(EMAIL_ADDR)"
+    transformation: "LOWER(TRIM(EMAIL_ADDR))"
     confidence: 0.90
   - vendor_table: CM_SUBSCRIBER
     vendor_field: ACTIVATION_DT
@@ -44,8 +65,470 @@ mappings:
     transformation: "PARSE_DATE('%Y%m%d', ACTIVATION_DT)"
     confidence: 0.95
   - vendor_table: CM_SUBSCRIBER
+    vendor_field: DEACTIVATION_DT
+    canonical_table: subscriber_profile
+    canonical_field: deactivation_date
+    transformation: "PARSE_DATE('%Y%m%d', DEACTIVATION_DT)"
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
     vendor_field: SUB_STATUS
     canonical_table: subscriber_profile
     canonical_field: status
-    transformation: "CASE SUB_STATUS WHEN 'A' THEN 'active' WHEN 'S' THEN 'suspended' WHEN 'T' THEN 'terminated' END"
+    transformation: "CASE SUB_STATUS WHEN 'A' THEN 'active' WHEN 'S' THEN 'suspended' WHEN 'T' THEN 'terminated' WHEN 'D' THEN 'dormant' WHEN 'P' THEN 'pending' END"
+    confidence: 0.90
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: SUB_TYPE_CD
+    canonical_table: subscriber_profile
+    canonical_field: subscriber_type
+    transformation: "CASE SUB_TYPE_CD WHEN 'PRE' THEN 'prepaid' WHEN 'POST' THEN 'postpaid' WHEN 'HYB' THEN 'hybrid' END"
+    confidence: 0.90
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: LANG_CD
+    canonical_table: subscriber_profile
+    canonical_field: language
+    transformation: "UPPER(LANG_CD)"
+    confidence: 0.85
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: DOB_DT
+    canonical_table: subscriber_profile
+    canonical_field: date_of_birth
+    transformation: "PARSE_DATE('%Y%m%d', DOB_DT)"
+    confidence: 0.90
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: GENDER_CD
+    canonical_table: subscriber_profile
+    canonical_field: gender
+    transformation: "CASE GENDER_CD WHEN 'M' THEN 'male' WHEN 'F' THEN 'female' WHEN 'O' THEN 'other' END"
+    confidence: 0.85
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: NATIONALITY_CD
+    canonical_table: subscriber_profile
+    canonical_field: nationality
+    transformation: "UPPER(NATIONALITY_CD)"
+    confidence: 0.85
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: ID_DOC_TYPE
+    canonical_table: subscriber_profile
+    canonical_field: id_type
+    transformation: "CASE ID_DOC_TYPE WHEN 'PP' THEN 'passport' WHEN 'NI' THEN 'national_id' WHEN 'DL' THEN 'driving_license' END"
+    confidence: 0.85
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: ID_DOC_NUM
+    canonical_table: subscriber_profile
+    canonical_field: id_number
+    transformation: "TRIM(ID_DOC_NUM)"
+    confidence: 0.90
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: CREATED_DT
+    canonical_table: subscriber_profile
+    canonical_field: created_at
+    transformation: "TIMESTAMP(CREATED_DT)"
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: LAST_MOD_DT
+    canonical_table: subscriber_profile
+    canonical_field: updated_at
+    transformation: "TIMESTAMP(LAST_MOD_DT)"
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: SEGMENT_CD
+    canonical_table: subscriber_profile
+    canonical_field: customer_segment
+    transformation: "CASE SEGMENT_CD WHEN 'VIP' THEN 'vip' WHEN 'HVL' THEN 'high_value' WHEN 'STD' THEN 'standard' WHEN 'LOW' THEN 'low_value' END"
+    confidence: 0.80
+
+  # ============================================================
+  # account mappings (from CM_ACCOUNT, CM_ACCT_HIER)
+  # ============================================================
+  - vendor_table: CM_ACCOUNT
+    vendor_field: ACCT_ID
+    canonical_table: account
+    canonical_field: account_id
+    transformation: "CAST(ACCT_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: CM_ACCOUNT
+    vendor_field: ACCT_NUM
+    canonical_table: account
+    canonical_field: account_number
+    transformation: "TRIM(ACCT_NUM)"
+    confidence: 0.95
+  - vendor_table: CM_ACCOUNT
+    vendor_field: ACCT_NM
+    canonical_table: account
+    canonical_field: account_name
+    transformation: "TRIM(ACCT_NM)"
+    confidence: 0.90
+  - vendor_table: CM_ACCOUNT
+    vendor_field: ACCT_TYPE_CD
+    canonical_table: account
+    canonical_field: account_type
+    transformation: "CASE ACCT_TYPE_CD WHEN 'IND' THEN 'individual' WHEN 'CRP' THEN 'corporate' WHEN 'GOV' THEN 'government' WHEN 'SMB' THEN 'small_business' END"
+    confidence: 0.90
+  - vendor_table: CM_ACCOUNT
+    vendor_field: ACCT_STATUS
+    canonical_table: account
+    canonical_field: status
+    transformation: "CASE ACCT_STATUS WHEN 'A' THEN 'active' WHEN 'S' THEN 'suspended' WHEN 'C' THEN 'closed' WHEN 'P' THEN 'pending' END"
+    confidence: 0.90
+  - vendor_table: CM_ACCOUNT
+    vendor_field: BILL_CYCLE_CD
+    canonical_table: account
+    canonical_field: billing_cycle
+    transformation: "CAST(BILL_CYCLE_CD AS INT64)"
+    confidence: 0.90
+  - vendor_table: CM_ACCOUNT
+    vendor_field: CREDIT_LIMIT_AMT
+    canonical_table: account
+    canonical_field: credit_limit
+    transformation: "CAST(CREDIT_LIMIT_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: CM_ACCOUNT
+    vendor_field: CURRENCY_CD
+    canonical_table: account
+    canonical_field: currency_code
+    transformation: "UPPER(CURRENCY_CD)"
+    confidence: 0.95
+  - vendor_table: CM_ACCOUNT
+    vendor_field: PAY_METHOD_CD
+    canonical_table: account
+    canonical_field: payment_method
+    transformation: "CASE PAY_METHOD_CD WHEN 'CC' THEN 'credit_card' WHEN 'DD' THEN 'direct_debit' WHEN 'CA' THEN 'cash' WHEN 'BT' THEN 'bank_transfer' WHEN 'EW' THEN 'e_wallet' END"
+    confidence: 0.85
+  - vendor_table: CM_ACCOUNT
+    vendor_field: OPEN_DT
+    canonical_table: account
+    canonical_field: opened_date
+    transformation: "PARSE_DATE('%Y%m%d', OPEN_DT)"
+    confidence: 0.90
+  - vendor_table: CM_ACCOUNT
+    vendor_field: CLOSE_DT
+    canonical_table: account
+    canonical_field: closed_date
+    transformation: "PARSE_DATE('%Y%m%d', CLOSE_DT)"
+    confidence: 0.90
+  - vendor_table: CM_ACCT_HIER
+    vendor_field: PARENT_ACCT_ID
+    canonical_table: account
+    canonical_field: parent_account_id
+    transformation: "CAST(PARENT_ACCT_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: CM_ACCT_HIER
+    vendor_field: HIER_LEVEL
+    canonical_table: account
+    canonical_field: hierarchy_level
+    transformation: "CAST(HIER_LEVEL AS INT64)"
+    confidence: 0.85
+  - vendor_table: CM_ACCOUNT
+    vendor_field: TAX_EXEMPT_FLG
+    canonical_table: account
+    canonical_field: tax_exempt
+    transformation: "CASE TAX_EXEMPT_FLG WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE END"
+    confidence: 0.85
+
+  # ============================================================
+  # subscriber_address mappings (from CM_ADDRESS)
+  # ============================================================
+  - vendor_table: CM_ADDRESS
+    vendor_field: ADDR_ID
+    canonical_table: subscriber_address
+    canonical_field: address_id
+    transformation: "CAST(ADDR_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: CM_ADDRESS
+    vendor_field: SUB_ID
+    canonical_table: subscriber_address
+    canonical_field: subscriber_id
+    transformation: "CAST(SUB_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: CM_ADDRESS
+    vendor_field: ADDR_TYPE_CD
+    canonical_table: subscriber_address
+    canonical_field: address_type
+    transformation: "CASE ADDR_TYPE_CD WHEN 'H' THEN 'home' WHEN 'B' THEN 'business' WHEN 'M' THEN 'mailing' WHEN 'S' THEN 'service' END"
+    confidence: 0.90
+  - vendor_table: CM_ADDRESS
+    vendor_field: ADDR_LINE_1
+    canonical_table: subscriber_address
+    canonical_field: address_line_1
+    transformation: "TRIM(ADDR_LINE_1)"
+    confidence: 0.95
+  - vendor_table: CM_ADDRESS
+    vendor_field: ADDR_LINE_2
+    canonical_table: subscriber_address
+    canonical_field: address_line_2
+    transformation: "TRIM(ADDR_LINE_2)"
+    confidence: 0.90
+  - vendor_table: CM_ADDRESS
+    vendor_field: CITY_NM
+    canonical_table: subscriber_address
+    canonical_field: city
+    transformation: "TRIM(CITY_NM)"
+    confidence: 0.95
+  - vendor_table: CM_ADDRESS
+    vendor_field: STATE_PROV_CD
+    canonical_table: subscriber_address
+    canonical_field: state_province
+    transformation: "UPPER(TRIM(STATE_PROV_CD))"
+    confidence: 0.90
+  - vendor_table: CM_ADDRESS
+    vendor_field: POSTAL_CD
+    canonical_table: subscriber_address
+    canonical_field: postal_code
+    transformation: "TRIM(POSTAL_CD)"
+    confidence: 0.95
+  - vendor_table: CM_ADDRESS
+    vendor_field: COUNTRY_CD
+    canonical_table: subscriber_address
+    canonical_field: country_code
+    transformation: "UPPER(COUNTRY_CD)"
+    confidence: 0.95
+  - vendor_table: CM_ADDRESS
+    vendor_field: GEO_LAT
+    canonical_table: subscriber_address
+    canonical_field: latitude
+    transformation: "CAST(GEO_LAT AS FLOAT64)"
+    confidence: 0.85
+  - vendor_table: CM_ADDRESS
+    vendor_field: GEO_LONG
+    canonical_table: subscriber_address
+    canonical_field: longitude
+    transformation: "CAST(GEO_LONG AS FLOAT64)"
+    confidence: 0.85
+
+  # ============================================================
+  # subscriber_consent mappings (from CM_CONTACT_CONSENT)
+  # ============================================================
+  - vendor_table: CM_CONTACT_CONSENT
+    vendor_field: CONSENT_ID
+    canonical_table: subscriber_consent
+    canonical_field: consent_id
+    transformation: "CAST(CONSENT_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: CM_CONTACT_CONSENT
+    vendor_field: SUB_ID
+    canonical_table: subscriber_consent
+    canonical_field: subscriber_id
+    transformation: "CAST(SUB_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: CM_CONTACT_CONSENT
+    vendor_field: CONSENT_TYPE_CD
+    canonical_table: subscriber_consent
+    canonical_field: consent_type
+    transformation: "CASE CONSENT_TYPE_CD WHEN 'MKT' THEN 'marketing' WHEN 'SMS' THEN 'sms_notification' WHEN 'EML' THEN 'email_notification' WHEN 'DAT' THEN 'data_sharing' WHEN 'LOC' THEN 'location_tracking' END"
+    confidence: 0.85
+  - vendor_table: CM_CONTACT_CONSENT
+    vendor_field: CONSENT_FLG
+    canonical_table: subscriber_consent
+    canonical_field: is_consented
+    transformation: "CASE CONSENT_FLG WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE END"
+    confidence: 0.90
+  - vendor_table: CM_CONTACT_CONSENT
+    vendor_field: CONSENT_DT
+    canonical_table: subscriber_consent
+    canonical_field: consent_date
+    transformation: "PARSE_DATE('%Y%m%d', CONSENT_DT)"
+    confidence: 0.90
+  - vendor_table: CM_CONTACT_CONSENT
+    vendor_field: CONSENT_CHANNEL
+    canonical_table: subscriber_consent
+    canonical_field: consent_channel
+    transformation: "CASE CONSENT_CHANNEL WHEN 'APP' THEN 'mobile_app' WHEN 'WEB' THEN 'web_portal' WHEN 'IVR' THEN 'ivr' WHEN 'RET' THEN 'retail_store' END"
+    confidence: 0.80
+
+  # ============================================================
+  # subscriber_device mappings (from CM_DEVICE)
+  # ============================================================
+  - vendor_table: CM_DEVICE
+    vendor_field: DEVICE_ID
+    canonical_table: subscriber_device
+    canonical_field: device_id
+    transformation: "CAST(DEVICE_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: CM_DEVICE
+    vendor_field: SUB_ID
+    canonical_table: subscriber_device
+    canonical_field: subscriber_id
+    transformation: "CAST(SUB_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: CM_DEVICE
+    vendor_field: IMEI_NUM
+    canonical_table: subscriber_device
+    canonical_field: imei
+    transformation: "TRIM(IMEI_NUM)"
+    confidence: 0.99
+  - vendor_table: CM_DEVICE
+    vendor_field: DEVICE_MAKE
+    canonical_table: subscriber_device
+    canonical_field: manufacturer
+    transformation: "UPPER(TRIM(DEVICE_MAKE))"
+    confidence: 0.90
+  - vendor_table: CM_DEVICE
+    vendor_field: DEVICE_MODEL
+    canonical_table: subscriber_device
+    canonical_field: model
+    transformation: "TRIM(DEVICE_MODEL)"
+    confidence: 0.90
+  - vendor_table: CM_DEVICE
+    vendor_field: OS_TYPE
+    canonical_table: subscriber_device
+    canonical_field: operating_system
+    transformation: "CASE OS_TYPE WHEN 'AND' THEN 'android' WHEN 'IOS' THEN 'ios' WHEN 'WIN' THEN 'windows' WHEN 'OTH' THEN 'other' END"
+    confidence: 0.85
+  - vendor_table: CM_DEVICE
+    vendor_field: DEVICE_STATUS
+    canonical_table: subscriber_device
+    canonical_field: status
+    transformation: "CASE DEVICE_STATUS WHEN 'A' THEN 'active' WHEN 'L' THEN 'lost' WHEN 'S' THEN 'stolen' WHEN 'R' THEN 'returned' WHEN 'D' THEN 'decommissioned' END"
+    confidence: 0.85
+  - vendor_table: CM_DEVICE
+    vendor_field: PROVISION_DT
+    canonical_table: subscriber_device
+    canonical_field: provisioned_date
+    transformation: "PARSE_DATE('%Y%m%d', PROVISION_DT)"
+    confidence: 0.90
+  - vendor_table: CM_DEVICE
+    vendor_field: SIM_TYPE_CD
+    canonical_table: subscriber_device
+    canonical_field: sim_type
+    transformation: "CASE SIM_TYPE_CD WHEN 'PHY' THEN 'physical' WHEN 'ESM' THEN 'esim' END"
+    confidence: 0.85
+
+  # ============================================================
+  # subscriber_balance mappings (from CM_BALANCE)
+  # ============================================================
+  - vendor_table: CM_BALANCE
+    vendor_field: BAL_ID
+    canonical_table: subscriber_balance
+    canonical_field: balance_id
+    transformation: "CAST(BAL_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: CM_BALANCE
+    vendor_field: SUB_ID
+    canonical_table: subscriber_balance
+    canonical_field: subscriber_id
+    transformation: "CAST(SUB_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: CM_BALANCE
+    vendor_field: BAL_TYPE_CD
+    canonical_table: subscriber_balance
+    canonical_field: balance_type
+    transformation: "CASE BAL_TYPE_CD WHEN 'MON' THEN 'monetary' WHEN 'VOI' THEN 'voice_minutes' WHEN 'DAT' THEN 'data_bytes' WHEN 'SMS' THEN 'sms_count' WHEN 'LOY' THEN 'loyalty_points' END"
+    confidence: 0.85
+  - vendor_table: CM_BALANCE
+    vendor_field: CURRENT_BAL
+    canonical_table: subscriber_balance
+    canonical_field: current_balance
+    transformation: "CAST(CURRENT_BAL AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: CM_BALANCE
+    vendor_field: RESERVED_BAL
+    canonical_table: subscriber_balance
+    canonical_field: reserved_balance
+    transformation: "CAST(RESERVED_BAL AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: CM_BALANCE
+    vendor_field: BAL_EXPIRY_DT
+    canonical_table: subscriber_balance
+    canonical_field: expiry_date
+    transformation: "PARSE_DATE('%Y%m%d', BAL_EXPIRY_DT)"
+    confidence: 0.90
+  - vendor_table: CM_BALANCE
+    vendor_field: LAST_RECHARGE_DT
+    canonical_table: subscriber_balance
+    canonical_field: last_recharge_date
+    transformation: "TIMESTAMP(LAST_RECHARGE_DT)"
+    confidence: 0.85
+  - vendor_table: CM_BALANCE
+    vendor_field: LAST_RECHARGE_AMT
+    canonical_table: subscriber_balance
+    canonical_field: last_recharge_amount
+    transformation: "CAST(LAST_RECHARGE_AMT AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: CM_BALANCE
+    vendor_field: CURRENCY_CD
+    canonical_table: subscriber_balance
+    canonical_field: currency_code
+    transformation: "UPPER(CURRENCY_CD)"
+    confidence: 0.90
+
+  # ============================================================
+  # subscriber_contract mappings (from CM_CONTRACT, CM_SERVICE_AGREEMENT)
+  # ============================================================
+  - vendor_table: CM_CONTRACT
+    vendor_field: CONTRACT_ID
+    canonical_table: subscriber_contract
+    canonical_field: contract_id
+    transformation: "CAST(CONTRACT_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: CM_CONTRACT
+    vendor_field: SUB_ID
+    canonical_table: subscriber_contract
+    canonical_field: subscriber_id
+    transformation: "CAST(SUB_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: CM_CONTRACT
+    vendor_field: ACCT_ID
+    canonical_table: subscriber_contract
+    canonical_field: account_id
+    transformation: "CAST(ACCT_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: CM_CONTRACT
+    vendor_field: CONTRACT_START_DT
+    canonical_table: subscriber_contract
+    canonical_field: start_date
+    transformation: "PARSE_DATE('%Y%m%d', CONTRACT_START_DT)"
+    confidence: 0.95
+  - vendor_table: CM_CONTRACT
+    vendor_field: CONTRACT_END_DT
+    canonical_table: subscriber_contract
+    canonical_field: end_date
+    transformation: "PARSE_DATE('%Y%m%d', CONTRACT_END_DT)"
+    confidence: 0.95
+  - vendor_table: CM_CONTRACT
+    vendor_field: CONTRACT_TERM
+    canonical_table: subscriber_contract
+    canonical_field: term_months
+    transformation: "CAST(CONTRACT_TERM AS INT64)"
+    confidence: 0.90
+  - vendor_table: CM_CONTRACT
+    vendor_field: CONTRACT_STATUS
+    canonical_table: subscriber_contract
+    canonical_field: status
+    transformation: "CASE CONTRACT_STATUS WHEN 'A' THEN 'active' WHEN 'E' THEN 'expired' WHEN 'C' THEN 'cancelled' WHEN 'R' THEN 'renewed' END"
+    confidence: 0.90
+  - vendor_table: CM_CONTRACT
+    vendor_field: EARLY_TERM_FEE
+    canonical_table: subscriber_contract
+    canonical_field: early_termination_fee
+    transformation: "CAST(EARLY_TERM_FEE AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: CM_CONTRACT
+    vendor_field: AUTO_RENEW_FLG
+    canonical_table: subscriber_contract
+    canonical_field: auto_renew
+    transformation: "CASE AUTO_RENEW_FLG WHEN 'Y' THEN TRUE WHEN 'N' THEN FALSE END"
+    confidence: 0.85
+  - vendor_table: CM_SERVICE_AGREEMENT
+    vendor_field: SA_ID
+    canonical_table: subscriber_contract
+    canonical_field: service_agreement_id
+    transformation: "CAST(SA_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: CM_SERVICE_AGREEMENT
+    vendor_field: SVC_TYPE_CD
+    canonical_table: subscriber_contract
+    canonical_field: service_type
+    transformation: "CASE SVC_TYPE_CD WHEN 'VOI' THEN 'voice' WHEN 'DAT' THEN 'data' WHEN 'SMS' THEN 'sms' WHEN 'VAS' THEN 'value_added' WHEN 'BDL' THEN 'bundle' END"
+    confidence: 0.85
+  - vendor_table: CM_SERVICE_AGREEMENT
+    vendor_field: MRC_AMT
+    canonical_table: subscriber_contract
+    canonical_field: monthly_recurring_charge
+    transformation: "CAST(MRC_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: CM_SERVICE_AGREEMENT
+    vendor_field: RATE_PLAN_ID
+    canonical_table: subscriber_contract
+    canonical_field: rate_plan_id
+    transformation: "CAST(RATE_PLAN_ID AS STRING)"
     confidence: 0.90

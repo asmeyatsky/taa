@@ -23,3 +23,17 @@ rules:
     encryption_required: true
     kms_rotation_days: 30
     retention_months: 12
+  - rule_id: SA-PDPL-004
+    description: "CDR data retention limited to regulatory requirement period"
+    applicable_pii_categories: [msisdn, imsi]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 24
+  - rule_id: SA-PDPL-005
+    description: "Cross-border data transfer prohibited without NDMO approval"
+    applicable_pii_categories: [msisdn, imsi, imei, email, national_id, name, address, date_of_birth, ip_address, location]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 36

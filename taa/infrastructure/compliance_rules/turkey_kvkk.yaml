@@ -1,0 +1,39 @@
+jurisdiction: TR
+framework: KVKK
+name: "Turkey Personal Data Protection Law (KVKK)"
+rules:
+  - rule_id: TR-KVKK-001
+    description: "Personal data must be processed within Turkey or with explicit consent for cross-border transfer"
+    applicable_pii_categories: [msisdn, imsi, imei, email, national_id, name, address, date_of_birth, ip_address, location]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 24
+  - rule_id: TR-KVKK-002
+    description: "Turkish national ID (TC Kimlik) requires enhanced protection and cannot be used as primary key"
+    applicable_pii_categories: [national_id]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 120
+  - rule_id: TR-KVKK-003
+    description: "Explicit consent required for processing sensitive personal data including biometrics and health"
+    applicable_pii_categories: [name, date_of_birth, location]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 36
+  - rule_id: TR-KVKK-004
+    description: "Data controller must register with VERBIS (Data Controllers Registry) and maintain processing records"
+    applicable_pii_categories: [msisdn, imsi, email, national_id, name]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 48
+  - rule_id: TR-KVKK-005
+    description: "Location data and traffic data subject to ICTA (BTK) telecommunications regulations"
+    applicable_pii_categories: [location, ip_address]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 24

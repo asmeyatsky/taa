@@ -1,0 +1,346 @@
+vendor: amdocs
+domain: revenue_invoice
+mappings:
+  # ============================================================
+  # invoice mappings (from AR_INVOICE)
+  # ============================================================
+  - vendor_table: AR_INVOICE
+    vendor_field: INV_ID
+    canonical_table: invoice
+    canonical_field: invoice_id
+    transformation: "CAST(INV_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: AR_INVOICE
+    vendor_field: INV_NUM
+    canonical_table: invoice
+    canonical_field: invoice_number
+    transformation: "TRIM(INV_NUM)"
+    confidence: 0.99
+  - vendor_table: AR_INVOICE
+    vendor_field: ACCT_ID
+    canonical_table: invoice
+    canonical_field: account_id
+    transformation: "CAST(ACCT_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: AR_INVOICE
+    vendor_field: BILL_CYCLE_CD
+    canonical_table: invoice
+    canonical_field: billing_cycle
+    transformation: "CAST(BILL_CYCLE_CD AS INT64)"
+    confidence: 0.90
+  - vendor_table: AR_INVOICE
+    vendor_field: BILL_PERIOD_START
+    canonical_table: invoice
+    canonical_field: period_start_date
+    transformation: "PARSE_DATE('%Y%m%d', BILL_PERIOD_START)"
+    confidence: 0.95
+  - vendor_table: AR_INVOICE
+    vendor_field: BILL_PERIOD_END
+    canonical_table: invoice
+    canonical_field: period_end_date
+    transformation: "PARSE_DATE('%Y%m%d', BILL_PERIOD_END)"
+    confidence: 0.95
+  - vendor_table: AR_INVOICE
+    vendor_field: INV_DT
+    canonical_table: invoice
+    canonical_field: invoice_date
+    transformation: "PARSE_DATE('%Y%m%d', INV_DT)"
+    confidence: 0.95
+  - vendor_table: AR_INVOICE
+    vendor_field: DUE_DT
+    canonical_table: invoice
+    canonical_field: due_date
+    transformation: "PARSE_DATE('%Y%m%d', DUE_DT)"
+    confidence: 0.95
+  - vendor_table: AR_INVOICE
+    vendor_field: TOTAL_AMT
+    canonical_table: invoice
+    canonical_field: total_amount
+    transformation: "CAST(TOTAL_AMT AS NUMERIC)"
+    confidence: 0.99
+  - vendor_table: AR_INVOICE
+    vendor_field: TAX_AMT
+    canonical_table: invoice
+    canonical_field: tax_amount
+    transformation: "CAST(TAX_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: AR_INVOICE
+    vendor_field: DISC_AMT
+    canonical_table: invoice
+    canonical_field: discount_amount
+    transformation: "CAST(DISC_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: AR_INVOICE
+    vendor_field: NET_AMT
+    canonical_table: invoice
+    canonical_field: net_amount
+    transformation: "COALESCE(CAST(NET_AMT AS NUMERIC), CAST(TOTAL_AMT AS NUMERIC) - CAST(DISC_AMT AS NUMERIC))"
+    confidence: 0.90
+  - vendor_table: AR_INVOICE
+    vendor_field: CURRENCY_CD
+    canonical_table: invoice
+    canonical_field: currency_code
+    transformation: "UPPER(CURRENCY_CD)"
+    confidence: 0.95
+  - vendor_table: AR_INVOICE
+    vendor_field: INV_STATUS
+    canonical_table: invoice
+    canonical_field: status
+    transformation: "CASE INV_STATUS WHEN 'O' THEN 'open' WHEN 'P' THEN 'paid' WHEN 'PP' THEN 'partially_paid' WHEN 'V' THEN 'void' WHEN 'D' THEN 'disputed' WHEN 'W' THEN 'written_off' END"
+    confidence: 0.90
+  - vendor_table: AR_INVOICE
+    vendor_field: PREV_BAL_AMT
+    canonical_table: invoice
+    canonical_field: previous_balance
+    transformation: "CAST(PREV_BAL_AMT AS NUMERIC)"
+    confidence: 0.85
+  - vendor_table: AR_INVOICE
+    vendor_field: INV_FORMAT_CD
+    canonical_table: invoice
+    canonical_field: delivery_format
+    transformation: "CASE INV_FORMAT_CD WHEN 'P' THEN 'paper' WHEN 'E' THEN 'electronic' WHEN 'B' THEN 'both' END"
+    confidence: 0.80
+
+  # ============================================================
+  # invoice_line_item mappings (from AR_INV_LINE)
+  # ============================================================
+  - vendor_table: AR_INV_LINE
+    vendor_field: INV_LINE_ID
+    canonical_table: invoice_line_item
+    canonical_field: line_item_id
+    transformation: "CAST(INV_LINE_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: AR_INV_LINE
+    vendor_field: INV_ID
+    canonical_table: invoice_line_item
+    canonical_field: invoice_id
+    transformation: "CAST(INV_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: AR_INV_LINE
+    vendor_field: SUB_ID
+    canonical_table: invoice_line_item
+    canonical_field: subscriber_id
+    transformation: "CAST(SUB_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: AR_INV_LINE
+    vendor_field: CHARGE_TYPE_CD
+    canonical_table: invoice_line_item
+    canonical_field: charge_type
+    transformation: "CASE CHARGE_TYPE_CD WHEN 'MRC' THEN 'monthly_recurring' WHEN 'OTC' THEN 'one_time' WHEN 'USG' THEN 'usage' WHEN 'TAX' THEN 'tax' WHEN 'ADJ' THEN 'adjustment' WHEN 'PEN' THEN 'penalty' WHEN 'PRO' THEN 'proration' END"
+    confidence: 0.85
+  - vendor_table: AR_INV_LINE
+    vendor_field: CHARGE_DESC
+    canonical_table: invoice_line_item
+    canonical_field: description
+    transformation: "TRIM(CHARGE_DESC)"
+    confidence: 0.90
+  - vendor_table: AR_INV_LINE
+    vendor_field: QUANTITY
+    canonical_table: invoice_line_item
+    canonical_field: quantity
+    transformation: "CAST(QUANTITY AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: AR_INV_LINE
+    vendor_field: UNIT_RATE
+    canonical_table: invoice_line_item
+    canonical_field: unit_price
+    transformation: "CAST(UNIT_RATE AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: AR_INV_LINE
+    vendor_field: LINE_AMT
+    canonical_table: invoice_line_item
+    canonical_field: line_amount
+    transformation: "CAST(LINE_AMT AS NUMERIC)"
+    confidence: 0.95
+  - vendor_table: AR_INV_LINE
+    vendor_field: TAX_AMT
+    canonical_table: invoice_line_item
+    canonical_field: tax_amount
+    transformation: "CAST(TAX_AMT AS NUMERIC)"
+    confidence: 0.90
+  - vendor_table: AR_INV_LINE
+    vendor_field: SVC_TYPE_CD
+    canonical_table: invoice_line_item
+    canonical_field: service_type
+    transformation: "CASE SVC_TYPE_CD WHEN 'VOI' THEN 'voice' WHEN 'DAT' THEN 'data' WHEN 'SMS' THEN 'sms' WHEN 'VAS' THEN 'value_added' WHEN 'ROA' THEN 'roaming' END"
+    confidence: 0.85
+  - vendor_table: AR_INV_LINE
+    vendor_field: RATE_PLAN_ID
+    canonical_table: invoice_line_item
+    canonical_field: rate_plan_id
+    transformation: "CAST(RATE_PLAN_ID AS STRING)"
+    confidence: 0.85
+
+  # ============================================================
+  # payment mappings (from AR_PAYMENT)
+  # ============================================================
+  - vendor_table: AR_PAYMENT
+    vendor_field: PAY_ID
+    canonical_table: payment
+    canonical_field: payment_id
+    transformation: "CAST(PAY_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: AR_PAYMENT
+    vendor_field: ACCT_ID
+    canonical_table: payment
+    canonical_field: account_id
+    transformation: "CAST(ACCT_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: AR_PAYMENT
+    vendor_field: INV_ID
+    canonical_table: payment
+    canonical_field: invoice_id
+    transformation: "CAST(INV_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: AR_PAYMENT
+    vendor_field: PAY_AMT
+    canonical_table: payment
+    canonical_field: amount
+    transformation: "CAST(PAY_AMT AS NUMERIC)"
+    confidence: 0.99
+  - vendor_table: AR_PAYMENT
+    vendor_field: PAY_DT
+    canonical_table: payment
+    canonical_field: payment_date
+    transformation: "PARSE_DATE('%Y%m%d', PAY_DT)"
+    confidence: 0.95
+  - vendor_table: AR_PAYMENT
+    vendor_field: PAY_METHOD_CD
+    canonical_table: payment
+    canonical_field: payment_method
+    transformation: "CASE PAY_METHOD_CD WHEN 'CC' THEN 'credit_card' WHEN 'DD' THEN 'direct_debit' WHEN 'CA' THEN 'cash' WHEN 'BT' THEN 'bank_transfer' WHEN 'EW' THEN 'e_wallet' WHEN 'CHK' THEN 'cheque' WHEN 'MOB' THEN 'mobile_money' END"
+    confidence: 0.85
+  - vendor_table: AR_PAYMENT
+    vendor_field: PAY_STATUS
+    canonical_table: payment
+    canonical_field: status
+    transformation: "CASE PAY_STATUS WHEN 'S' THEN 'successful' WHEN 'F' THEN 'failed' WHEN 'P' THEN 'pending' WHEN 'R' THEN 'reversed' WHEN 'C' THEN 'cancelled' END"
+    confidence: 0.90
+  - vendor_table: AR_PAYMENT
+    vendor_field: CURRENCY_CD
+    canonical_table: payment
+    canonical_field: currency_code
+    transformation: "UPPER(CURRENCY_CD)"
+    confidence: 0.95
+  - vendor_table: AR_PAYMENT
+    vendor_field: PAY_REF_NUM
+    canonical_table: payment
+    canonical_field: reference_number
+    transformation: "TRIM(PAY_REF_NUM)"
+    confidence: 0.85
+  - vendor_table: AR_PAYMENT
+    vendor_field: PAY_CHANNEL_CD
+    canonical_table: payment
+    canonical_field: payment_channel
+    transformation: "CASE PAY_CHANNEL_CD WHEN 'WEB' THEN 'web_portal' WHEN 'APP' THEN 'mobile_app' WHEN 'RET' THEN 'retail_store' WHEN 'AGT' THEN 'agent' WHEN 'ATM' THEN 'atm' WHEN 'IVR' THEN 'ivr' END"
+    confidence: 0.80
+
+  # ============================================================
+  # adjustment mappings (from AR_ADJUSTMENT)
+  # ============================================================
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: ADJ_ID
+    canonical_table: adjustment
+    canonical_field: adjustment_id
+    transformation: "CAST(ADJ_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: ACCT_ID
+    canonical_table: adjustment
+    canonical_field: account_id
+    transformation: "CAST(ACCT_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: INV_ID
+    canonical_table: adjustment
+    canonical_field: invoice_id
+    transformation: "CAST(INV_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: ADJ_AMT
+    canonical_table: adjustment
+    canonical_field: amount
+    transformation: "CAST(ADJ_AMT AS NUMERIC)"
+    confidence: 0.99
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: ADJ_TYPE_CD
+    canonical_table: adjustment
+    canonical_field: adjustment_type
+    transformation: "CASE ADJ_TYPE_CD WHEN 'CR' THEN 'credit' WHEN 'DR' THEN 'debit' WHEN 'GW' THEN 'goodwill' WHEN 'ERR' THEN 'error_correction' WHEN 'PRO' THEN 'proration' END"
+    confidence: 0.85
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: ADJ_REASON_CD
+    canonical_table: adjustment
+    canonical_field: reason_code
+    transformation: "TRIM(ADJ_REASON_CD)"
+    confidence: 0.85
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: ADJ_DT
+    canonical_table: adjustment
+    canonical_field: adjustment_date
+    transformation: "PARSE_DATE('%Y%m%d', ADJ_DT)"
+    confidence: 0.95
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: ADJ_STATUS
+    canonical_table: adjustment
+    canonical_field: status
+    transformation: "CASE ADJ_STATUS WHEN 'A' THEN 'approved' WHEN 'P' THEN 'pending' WHEN 'R' THEN 'rejected' WHEN 'V' THEN 'void' END"
+    confidence: 0.90
+  - vendor_table: AR_ADJUSTMENT
+    vendor_field: APPROVED_BY
+    canonical_table: adjustment
+    canonical_field: approved_by
+    transformation: "TRIM(APPROVED_BY)"
+    confidence: 0.80
+
+  # ============================================================
+  # credit_note mappings (from AR_CREDIT_NOTE)
+  # ============================================================
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: CN_ID
+    canonical_table: credit_note
+    canonical_field: credit_note_id
+    transformation: "CAST(CN_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: CN_NUM
+    canonical_table: credit_note
+    canonical_field: credit_note_number
+    transformation: "TRIM(CN_NUM)"
+    confidence: 0.95
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: INV_ID
+    canonical_table: credit_note
+    canonical_field: original_invoice_id
+    transformation: "CAST(INV_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: ACCT_ID
+    canonical_table: credit_note
+    canonical_field: account_id
+    transformation: "CAST(ACCT_ID AS STRING)"
+    confidence: 0.95
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: CN_AMT
+    canonical_table: credit_note
+    canonical_field: amount
+    transformation: "CAST(CN_AMT AS NUMERIC)"
+    confidence: 0.99
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: CN_DT
+    canonical_table: credit_note
+    canonical_field: issue_date
+    transformation: "PARSE_DATE('%Y%m%d', CN_DT)"
+    confidence: 0.95
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: CN_REASON_CD
+    canonical_table: credit_note
+    canonical_field: reason
+    transformation: "CASE CN_REASON_CD WHEN 'OVR' THEN 'overcharge' WHEN 'SVC' THEN 'service_issue' WHEN 'RET' THEN 'retention' WHEN 'ERR' THEN 'billing_error' END"
+    confidence: 0.85
+  - vendor_table: AR_CREDIT_NOTE
+    vendor_field: CN_STATUS
+    canonical_table: credit_note
+    canonical_field: status
+    transformation: "CASE CN_STATUS WHEN 'A' THEN 'applied' WHEN 'P' THEN 'pending' WHEN 'V' THEN 'void' END"
+    confidence: 0.90

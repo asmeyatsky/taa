@@ -1,0 +1,216 @@
+vendor: ericsson_bscs
+domain: revenue_invoice
+mappings:
+  # --- BILLIMAGE_ALL: Invoice/bill records ---
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHXACT
+    canonical_table: invoice
+    canonical_field: invoice_id
+    transformation: "CAST(OHXACT AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: CUSTOMER_ID
+    canonical_table: invoice
+    canonical_field: customer_id
+    transformation: "CAST(CUSTOMER_ID AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: BILLCYCLE
+    canonical_table: invoice
+    canonical_field: bill_cycle_id
+    transformation: "TRIM(BILLCYCLE)"
+    confidence: 0.95
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHREFDATE
+    canonical_table: invoice
+    canonical_field: invoice_date
+    transformation: "PARSE_DATE('%Y%m%d', CAST(OHREFDATE AS STRING))"
+    confidence: 0.95
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHBILLDATE
+    canonical_table: invoice
+    canonical_field: bill_date
+    transformation: "PARSE_DATE('%Y%m%d', CAST(OHBILLDATE AS STRING))"
+    confidence: 0.93
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHINVAMT_GL
+    canonical_table: invoice
+    canonical_field: total_amount
+    transformation: "CAST(OHINVAMT_GL AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHTAXAMT
+    canonical_table: invoice
+    canonical_field: tax_amount
+    transformation: "CAST(OHTAXAMT AS NUMERIC) / 100"
+    confidence: 0.93
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHNETAMT
+    canonical_table: invoice
+    canonical_field: net_amount
+    transformation: "CAST(OHNETAMT AS NUMERIC) / 100"
+    confidence: 0.93
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHDISCAMT
+    canonical_table: invoice
+    canonical_field: discount_amount
+    transformation: "CAST(OHDISCAMT AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHSTATUS
+    canonical_table: invoice
+    canonical_field: invoice_status
+    transformation: "CASE OHSTATUS WHEN 'C' THEN 'closed' WHEN 'O' THEN 'open' WHEN 'S' THEN 'sent' WHEN 'P' THEN 'paid' ELSE 'unknown' END"
+    confidence: 0.88
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHDUEDATE
+    canonical_table: invoice
+    canonical_field: due_date
+    transformation: "PARSE_DATE('%Y%m%d', CAST(OHDUEDATE AS STRING))"
+    confidence: 0.95
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHCURRENCY
+    canonical_table: invoice
+    canonical_field: currency_code
+    transformation: "CASE OHCURRENCY WHEN 1 THEN 'USD' WHEN 2 THEN 'EUR' WHEN 3 THEN 'GBP' ELSE CAST(OHCURRENCY AS STRING) END"
+    confidence: 0.82
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHPERIOD_FROM
+    canonical_table: invoice
+    canonical_field: period_start_date
+    transformation: "PARSE_DATE('%Y%m%d', CAST(OHPERIOD_FROM AS STRING))"
+    confidence: 0.93
+
+  - vendor_table: BILLIMAGE_ALL
+    vendor_field: OHPERIOD_TO
+    canonical_table: invoice
+    canonical_field: period_end_date
+    transformation: "PARSE_DATE('%Y%m%d', CAST(OHPERIOD_TO AS STRING))"
+    confidence: 0.93
+
+  # --- ORDERHDR_ALL: Invoice line items / charge details ---
+  - vendor_table: ORDERHDR_ALL
+    vendor_field: OHXACT
+    canonical_table: invoice_line_item
+    canonical_field: line_item_id
+    transformation: "CAST(OHXACT AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: ORDERHDR_ALL
+    vendor_field: CO_ID
+    canonical_table: invoice_line_item
+    canonical_field: subscriber_id
+    transformation: "CAST(CO_ID AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: ORDERHDR_ALL
+    vendor_field: OHTTYPE
+    canonical_table: invoice_line_item
+    canonical_field: charge_type
+    transformation: "CASE OHTTYPE WHEN 'A' THEN 'access_fee' WHEN 'U' THEN 'usage' WHEN 'R' THEN 'recurring' WHEN 'O' THEN 'one_time' WHEN 'P' THEN 'penalty' ELSE 'other' END"
+    confidence: 0.88
+
+  - vendor_table: ORDERHDR_ALL
+    vendor_field: OHAMT
+    canonical_table: invoice_line_item
+    canonical_field: amount
+    transformation: "CAST(OHAMT AS NUMERIC) / 100"
+    confidence: 0.95
+
+  - vendor_table: ORDERHDR_ALL
+    vendor_field: OHTAXAMT
+    canonical_table: invoice_line_item
+    canonical_field: tax_amount
+    transformation: "CAST(OHTAXAMT AS NUMERIC) / 100"
+    confidence: 0.90
+
+  - vendor_table: ORDERHDR_ALL
+    vendor_field: OHDESC
+    canonical_table: invoice_line_item
+    canonical_field: description
+    transformation: "TRIM(OHDESC)"
+    confidence: 0.92
+
+  - vendor_table: ORDERHDR_ALL
+    vendor_field: SNCODE
+    canonical_table: invoice_line_item
+    canonical_field: service_type
+    transformation: "CASE SNCODE WHEN 1 THEN 'voice' WHEN 2 THEN 'data' WHEN 3 THEN 'sms' WHEN 4 THEN 'vas' ELSE 'other' END"
+    confidence: 0.85
+
+  # --- PAYMENT_ALL: Payment records ---
+  - vendor_table: PAYMENT_ALL
+    vendor_field: PAYMENT_ID
+    canonical_table: payment
+    canonical_field: payment_id
+    transformation: "CAST(PAYMENT_ID AS STRING)"
+    confidence: 0.98
+
+  - vendor_table: PAYMENT_ALL
+    vendor_field: CUSTOMER_ID
+    canonical_table: payment
+    canonical_field: customer_id
+    transformation: "CAST(CUSTOMER_ID AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: PAYMENT_ALL
+    vendor_field: PAYMENT_AMT
+    canonical_table: payment
+    canonical_field: payment_amount
+    transformation: "CAST(PAYMENT_AMT AS NUMERIC) / 100"
+    confidence: 0.97
+
+  - vendor_table: PAYMENT_ALL
+    vendor_field: PAYMENT_DATE
+    canonical_table: payment
+    canonical_field: payment_date
+    transformation: "PARSE_TIMESTAMP('%Y%m%d%H%M%S', CAST(PAYMENT_DATE AS STRING))"
+    confidence: 0.95
+
+  - vendor_table: PAYMENT_ALL
+    vendor_field: PAYMENT_METHOD
+    canonical_table: payment
+    canonical_field: payment_method
+    transformation: "CASE PAYMENT_METHOD WHEN 'C' THEN 'cash' WHEN 'K' THEN 'credit_card' WHEN 'B' THEN 'bank_transfer' WHEN 'D' THEN 'direct_debit' ELSE 'other' END"
+    confidence: 0.88
+
+  - vendor_table: PAYMENT_ALL
+    vendor_field: RECEIPT_NUM
+    canonical_table: payment
+    canonical_field: receipt_number
+    transformation: "TRIM(RECEIPT_NUM)"
+    confidence: 0.90
+
+  - vendor_table: PAYMENT_ALL
+    vendor_field: PAYMENT_STATUS
+    canonical_table: payment
+    canonical_field: payment_status
+    transformation: "CASE PAYMENT_STATUS WHEN 'A' THEN 'applied' WHEN 'P' THEN 'pending' WHEN 'R' THEN 'reversed' ELSE 'unknown' END"
+    confidence: 0.85
+
+  # --- CCONTACT_ALL: Outstanding balance / AR ---
+  - vendor_table: CCONTACT_ALL
+    vendor_field: CCBALANCE
+    canonical_table: accounts_receivable
+    canonical_field: outstanding_balance
+    transformation: "CAST(CCBALANCE AS NUMERIC) / 100"
+    confidence: 0.82
+
+  - vendor_table: CCONTACT_ALL
+    vendor_field: CCOVERDUE
+    canonical_table: accounts_receivable
+    canonical_field: overdue_amount
+    transformation: "CAST(CCOVERDUE AS NUMERIC) / 100"
+    confidence: 0.78

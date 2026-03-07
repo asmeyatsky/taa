@@ -1,0 +1,266 @@
+vendor: oracle_brm
+domain: cdr_event
+mappings:
+  # --- EVENT_T: Core event/CDR records ---
+  - vendor_table: EVENT_T
+    vendor_field: POID_ID0
+    canonical_table: voice_cdr
+    canonical_field: cdr_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.99
+
+  - vendor_table: EVENT_T
+    vendor_field: ACCOUNT_OBJ_ID0
+    canonical_table: voice_cdr
+    canonical_field: account_id
+    transformation: "CAST(ACCOUNT_OBJ_ID0 AS STRING)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_T
+    vendor_field: SERVICE_OBJ_ID0
+    canonical_table: voice_cdr
+    canonical_field: service_id
+    transformation: "CAST(SERVICE_OBJ_ID0 AS STRING)"
+    confidence: 0.95
+
+  - vendor_table: EVENT_T
+    vendor_field: START_T
+    canonical_table: voice_cdr
+    canonical_field: event_start_time
+    transformation: "TIMESTAMP_SECONDS(START_T)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_T
+    vendor_field: START_T
+    canonical_table: voice_cdr
+    canonical_field: event_date
+    transformation: "DATE(TIMESTAMP_SECONDS(START_T))"
+    confidence: 0.95
+
+  - vendor_table: EVENT_T
+    vendor_field: END_T
+    canonical_table: voice_cdr
+    canonical_field: event_end_time
+    transformation: "TIMESTAMP_SECONDS(END_T)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_T
+    vendor_field: POID_TYPE
+    canonical_table: voice_cdr
+    canonical_field: event_type
+    transformation: "CASE WHEN POID_TYPE LIKE '%/session/telco/gsm%' THEN 'voice' WHEN POID_TYPE LIKE '%/session/telco/gprs%' THEN 'data' WHEN POID_TYPE LIKE '%/session/telco/sms%' THEN 'sms' WHEN POID_TYPE LIKE '%/session/telco/mms%' THEN 'mms' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: EVENT_T
+    vendor_field: CREATED_T
+    canonical_table: voice_cdr
+    canonical_field: record_created_time
+    transformation: "TIMESTAMP_SECONDS(CREATED_T)"
+    confidence: 0.95
+
+  - vendor_table: EVENT_T
+    vendor_field: NET_QUANTITY
+    canonical_table: voice_cdr
+    canonical_field: duration_seconds
+    transformation: "CAST(NET_QUANTITY AS INT64)"
+    confidence: 0.90
+
+  - vendor_table: EVENT_T
+    vendor_field: DESCR
+    canonical_table: voice_cdr
+    canonical_field: event_description
+    transformation: "TRIM(DESCR)"
+    confidence: 0.80
+
+  - vendor_table: EVENT_T
+    vendor_field: SYS_DESCR
+    canonical_table: voice_cdr
+    canonical_field: system_description
+    transformation: "TRIM(SYS_DESCR)"
+    confidence: 0.75
+
+  # --- EVENT_BAL_IMPACTS_T: Charge/balance impact details ---
+  - vendor_table: EVENT_BAL_IMPACTS_T
+    vendor_field: AMOUNT
+    canonical_table: voice_cdr
+    canonical_field: rated_amount
+    transformation: "CAST(AMOUNT AS NUMERIC)"
+    confidence: 0.95
+
+  - vendor_table: EVENT_BAL_IMPACTS_T
+    vendor_field: DISCOUNT
+    canonical_table: voice_cdr
+    canonical_field: discount_amount
+    transformation: "CAST(DISCOUNT AS NUMERIC)"
+    confidence: 0.92
+
+  - vendor_table: EVENT_BAL_IMPACTS_T
+    vendor_field: RESOURCE_ID
+    canonical_table: voice_cdr
+    canonical_field: balance_resource
+    transformation: "CASE RESOURCE_ID WHEN 840 THEN 'USD' WHEN 978 THEN 'EUR' WHEN 1000001 THEN 'free_minutes' WHEN 1000002 THEN 'free_sms' WHEN 1000003 THEN 'free_data_mb' ELSE CAST(RESOURCE_ID AS STRING) END"
+    confidence: 0.85
+
+  - vendor_table: EVENT_BAL_IMPACTS_T
+    vendor_field: TAX
+    canonical_table: voice_cdr
+    canonical_field: tax_amount
+    transformation: "CAST(TAX AS NUMERIC)"
+    confidence: 0.93
+
+  - vendor_table: EVENT_BAL_IMPACTS_T
+    vendor_field: RATE_TAG
+    canonical_table: voice_cdr
+    canonical_field: rate_tag
+    transformation: "TRIM(RATE_TAG)"
+    confidence: 0.82
+
+  - vendor_table: EVENT_BAL_IMPACTS_T
+    vendor_field: IMPACT_TYPE
+    canonical_table: voice_cdr
+    canonical_field: impact_type
+    transformation: "CASE IMPACT_TYPE WHEN 1 THEN 'rated' WHEN 2 THEN 'pre_rated' WHEN 4 THEN 'tax' WHEN 8 THEN 'discount' ELSE 'other' END"
+    confidence: 0.85
+
+  # --- EVENT_TELCO_INFO_T: Telecom-specific CDR fields ---
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: CALLING_FROM
+    canonical_table: voice_cdr
+    canonical_field: calling_number
+    transformation: "TRIM(CALLING_FROM)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: CALLED_TO
+    canonical_table: voice_cdr
+    canonical_field: called_number
+    transformation: "TRIM(CALLED_TO)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: PRIMARY_MSID
+    canonical_table: voice_cdr
+    canonical_field: msisdn
+    transformation: "TRIM(PRIMARY_MSID)"
+    confidence: 0.95
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: IMSI
+    canonical_table: voice_cdr
+    canonical_field: imsi
+    transformation: "TRIM(IMSI)"
+    confidence: 0.98
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: IMEI
+    canonical_table: voice_cdr
+    canonical_field: imei
+    transformation: "TRIM(IMEI)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: CALL_TYPE
+    canonical_table: voice_cdr
+    canonical_field: call_type
+    transformation: "CASE CALL_TYPE WHEN 0 THEN 'local' WHEN 1 THEN 'national' WHEN 2 THEN 'international' WHEN 3 THEN 'premium' WHEN 4 THEN 'toll_free' ELSE 'other' END"
+    confidence: 0.90
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: CALL_DIRECTION
+    canonical_table: voice_cdr
+    canonical_field: direction
+    transformation: "CASE CALL_DIRECTION WHEN 0 THEN 'originating' WHEN 1 THEN 'terminating' WHEN 2 THEN 'forwarding' ELSE 'unknown' END"
+    confidence: 0.92
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: CELL_ID
+    canonical_table: voice_cdr
+    canonical_field: cell_id
+    transformation: "TRIM(CELL_ID)"
+    confidence: 0.90
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: ORIGIN_NETWORK
+    canonical_table: voice_cdr
+    canonical_field: originating_network
+    transformation: "TRIM(ORIGIN_NETWORK)"
+    confidence: 0.85
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: TERM_NETWORK
+    canonical_table: voice_cdr
+    canonical_field: terminating_network
+    transformation: "TRIM(TERM_NETWORK)"
+    confidence: 0.85
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: ROAMING_FLAG
+    canonical_table: voice_cdr
+    canonical_field: is_roaming
+    transformation: "CASE ROAMING_FLAG WHEN 1 THEN TRUE ELSE FALSE END"
+    confidence: 0.95
+
+  - vendor_table: EVENT_TELCO_INFO_T
+    vendor_field: VISIT_NETWORK
+    canonical_table: voice_cdr
+    canonical_field: roaming_network
+    transformation: "TRIM(VISIT_NETWORK)"
+    confidence: 0.85
+
+  # --- EVENT_TELCO_GPRS_T: Data usage specific ---
+  - vendor_table: EVENT_TELCO_GPRS_T
+    vendor_field: BYTES_UPLINK
+    canonical_table: data_cdr
+    canonical_field: upload_bytes
+    transformation: "CAST(BYTES_UPLINK AS INT64)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_TELCO_GPRS_T
+    vendor_field: BYTES_DOWNLINK
+    canonical_table: data_cdr
+    canonical_field: download_bytes
+    transformation: "CAST(BYTES_DOWNLINK AS INT64)"
+    confidence: 0.97
+
+  - vendor_table: EVENT_TELCO_GPRS_T
+    vendor_field: APN
+    canonical_table: data_cdr
+    canonical_field: access_point_name
+    transformation: "TRIM(APN)"
+    confidence: 0.95
+
+  - vendor_table: EVENT_TELCO_GPRS_T
+    vendor_field: RAT_TYPE
+    canonical_table: data_cdr
+    canonical_field: radio_access_type
+    transformation: "CASE RAT_TYPE WHEN 1 THEN '2G' WHEN 2 THEN '3G' WHEN 3 THEN '4G' WHEN 6 THEN '5G' ELSE 'unknown' END"
+    confidence: 0.88
+
+  - vendor_table: EVENT_TELCO_GPRS_T
+    vendor_field: SGSN_ADDRESS
+    canonical_table: data_cdr
+    canonical_field: sgsn_address
+    transformation: "TRIM(SGSN_ADDRESS)"
+    confidence: 0.85
+
+  - vendor_table: EVENT_TELCO_GPRS_T
+    vendor_field: GGSN_ADDRESS
+    canonical_table: data_cdr
+    canonical_field: ggsn_address
+    transformation: "TRIM(GGSN_ADDRESS)"
+    confidence: 0.85
+
+  # --- EVENT_TELCO_GSM_T: Voice/GSM specific ---
+  - vendor_table: EVENT_TELCO_GSM_T
+    vendor_field: USAGE_DURATION
+    canonical_table: voice_cdr
+    canonical_field: duration_seconds
+    transformation: "CAST(USAGE_DURATION AS INT64)"
+    confidence: 0.95
+
+  - vendor_table: EVENT_TELCO_GSM_T
+    vendor_field: TERMINATION_CAUSE
+    canonical_table: voice_cdr
+    canonical_field: result_code
+    transformation: "CASE TERMINATION_CAUSE WHEN 0 THEN 'normal_clearing' WHEN 16 THEN 'normal_clearing' WHEN 17 THEN 'busy' WHEN 18 THEN 'no_answer' WHEN 21 THEN 'rejected' ELSE CAST(TERMINATION_CAUSE AS STRING) END"
+    confidence: 0.85

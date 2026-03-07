@@ -1,0 +1,54 @@
+{# Cloud Monitoring alerting policies #}
+{% for dataset in datasets %}
+resource "google_monitoring_alert_policy" "{{ dataset.name }}_stale_data" {
+  display_name = "TAA: Stale data in {{ dataset.name }}"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "No new data in {{ dataset.name }} for 24h"
+
+    condition_threshold {
+      filter          = "metric.type=\"bigquery.googleapis.com/storage/uploaded_row_count\" AND resource.type=\"bigquery_dataset\" AND resource.label.dataset_id=\"{{ dataset.name }}\""
+      comparison      = "COMPARISON_LT"
+      threshold_value = 1
+      duration        = "86400s"
+
+      aggregations {
+        alignment_period   = "3600s"
+        per_series_aligner = "ALIGNER_SUM"
+      }
+    }
+  }
+
+  notification_channels = []
+
+  documentation {
+    content   = "No data has been loaded into {{ dataset.name }} in the last 24 hours. Check Dataflow pipelines and Airflow DAGs."
+    mime_type = "text/markdown"
+  }
+}
+
+{% endfor %}
+
+resource "google_monitoring_alert_policy" "pipeline_failure" {
+  display_name = "TAA: Dataflow pipeline failure"
+  combiner     = "OR"
+
+  conditions {
+    display_name = "Dataflow job failed"
+
+    condition_threshold {
+      filter          = "metric.type=\"dataflow.googleapis.com/job/status\" AND resource.type=\"dataflow_job\""
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0
+      duration        = "0s"
+
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGNER_COUNT"
+      }
+    }
+  }
+
+  notification_channels = []
+}
