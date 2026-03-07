@@ -342,6 +342,267 @@ def generate_pack(ctx: click.Context, domains: str, jurisdiction: str, vendor: s
     _print_result(result)
 
 
+# --- Schema import commands ---
+
+@cli.group()
+def schema() -> None:
+    """Schema import and discovery."""
+
+
+@schema.command("import")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--format", "-f", "fmt", default="auto", type=click.Choice(["auto", "ddl", "csv"]),
+              help="Input format")
+@click.option("--domains", "-d", default=None, help="Comma-separated canonical domains to match against (default: all)")
+@click.option("--output", "-o", default=None, type=click.Path(), help="Output file for gap report")
+@click.pass_context
+def schema_import(ctx: click.Context, file: str, fmt: str, domains: str | None, output: str | None) -> None:
+    """Import an external schema (DDL or CSV) and auto-detect vendor, suggest mappings."""
+    from taa.infrastructure.schema_import import SchemaParser, VendorDetector, MappingSuggester, GapAnalyzer
+    from taa.domain.value_objects.enums import TelcoDomain
+
+    container: Container = ctx.obj["container"]
+
+    # Parse input
+    parser = SchemaParser()
+    imported = parser.parse_file(file)
+    click.echo(f"Parsed {len(imported)} tables, {sum(len(t.columns) for t in imported)} columns")
+
+    # Detect vendor
+    detector = VendorDetector()
+    detection = detector.detect(imported)
+    if detection.vendor:
+        click.echo(f"Detected vendor: {detection.vendor.value} (confidence: {detection.confidence:.0%})")
+    else:
+        click.echo("Could not auto-detect vendor")
+
+    # Load canonical tables
+    if domains:
+        domain_list = [TelcoDomain(d) for d in domains.split(",")]
+    else:
+        domain_list = list(TelcoDomain)
+
+    canonical: list = []
+    for domain in domain_list:
+        canonical.extend(container.domain_repo.load_tables(domain))
+    canonical_tables = tuple(canonical)
+
+    # Suggest mappings
+    suggester = MappingSuggester()
+    suggestions = suggester.suggest(imported, canonical_tables, detection.vendor)
+
+    # Gap analysis
+    analyzer = GapAnalyzer()
+    report = analyzer.analyze(
+        imported, canonical_tables, suggestions,
+        vendor=detection.vendor, vendor_confidence=detection.confidence,
+    )
+
+    click.echo(f"Suggested {len(suggestions)} mappings")
+    click.echo(f"Canonical coverage: {report.mapping_coverage_pct:.1f}%")
+    click.echo(f"Import coverage: {report.import_coverage_pct:.1f}%")
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(report.to_markdown())
+        click.echo(f"Report written to: {output}")
+    else:
+        # Print top suggestions
+        if suggestions:
+            click.echo("\nTop mappings:")
+            for s in sorted(suggestions, key=lambda x: -x.confidence)[:15]:
+                click.echo(f"  {s.vendor_table}.{s.vendor_field} -> {s.canonical_table}.{s.canonical_field} ({s.confidence:.0%} {s.match_reason})")
+
+
+@schema.command("connect")
+@click.option("--host", required=True, help="Database host")
+@click.option("--port", required=True, type=int, help="Database port")
+@click.option("--database", required=True, help="Database name/SID")
+@click.option("--username", required=True, help="Database username")
+@click.option("--password", prompt=True, hide_input=True, help="Database password")
+@click.option("--db-type", default="oracle", type=click.Choice(["oracle", "mysql", "postgresql", "mssql"]),
+              help="Database type")
+@click.option("--schema-filter", default="", help="Schema/owner filter")
+@click.option("--domains", "-d", default=None, help="Comma-separated canonical domains")
+@click.option("--output", "-o", default=None, type=click.Path(), help="Output file for gap report")
+@click.pass_context
+def schema_connect(ctx: click.Context, host: str, port: int, database: str,
+                   username: str, password: str, db_type: str, schema_filter: str,
+                   domains: str | None, output: str | None) -> None:
+    """Connect to a live BSS database, introspect schema, and suggest mappings."""
+    from taa.infrastructure.schema_import import (
+        BSSConnector, BSSConnectionConfig, VendorDetector, MappingSuggester, GapAnalyzer,
+    )
+    from taa.domain.value_objects.enums import TelcoDomain
+
+    container: Container = ctx.obj["container"]
+
+    config = BSSConnectionConfig(
+        host=host, port=port, database=database,
+        username=username, password=password,
+        db_type=db_type, schema_filter=schema_filter,
+    )
+    connector = BSSConnector(config)
+
+    click.echo(f"Connecting to {db_type}://{host}:{port}/{database}...")
+    if not connector.test_connection():
+        click.secho("Connection failed. Check credentials and network.", fg="red")
+        return
+
+    click.echo("Connected. Introspecting schema...")
+    imported = connector.introspect()
+    click.echo(f"Found {len(imported)} tables, {sum(len(t.columns) for t in imported)} columns")
+
+    # Detect vendor
+    detector = VendorDetector()
+    detection = detector.detect(imported)
+    if detection.vendor:
+        click.echo(f"Detected vendor: {detection.vendor.value} (confidence: {detection.confidence:.0%})")
+
+    # Load canonical
+    if domains:
+        domain_list = [TelcoDomain(d) for d in domains.split(",")]
+    else:
+        domain_list = list(TelcoDomain)
+    canonical = []
+    for domain in domain_list:
+        canonical.extend(container.domain_repo.load_tables(domain))
+
+    # Suggest mappings
+    suggester = MappingSuggester()
+    suggestions = suggester.suggest(imported, tuple(canonical), detection.vendor)
+
+    analyzer = GapAnalyzer()
+    report = analyzer.analyze(
+        imported, tuple(canonical), suggestions,
+        vendor=detection.vendor, vendor_confidence=detection.confidence,
+    )
+
+    click.echo(f"Suggested {len(suggestions)} mappings (coverage: {report.mapping_coverage_pct:.1f}%)")
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(report.to_markdown())
+        click.echo(f"Report written to: {output}")
+    else:
+        for s in sorted(suggestions, key=lambda x: -x.confidence)[:15]:
+            click.echo(f"  {s.vendor_table}.{s.vendor_field} -> {s.canonical_table}.{s.canonical_field} ({s.confidence:.0%})")
+
+
+@schema.command("ai-map")
+@click.argument("file", type=click.Path(exists=True))
+@click.option("--provider", "-p", default="anthropic", type=click.Choice(["anthropic", "google"]),
+              help="LLM provider")
+@click.option("--model", "-m", default=None, help="Model name (default: claude-sonnet-4-20250514 / gemini-pro)")
+@click.option("--domains", "-d", default=None, help="Comma-separated canonical domains")
+@click.option("--output", "-o", default=None, type=click.Path(), help="Output file for mapping report")
+@click.pass_context
+def schema_ai_map(ctx: click.Context, file: str, provider: str, model: str | None,
+                  domains: str | None, output: str | None) -> None:
+    """Use AI (Claude/Gemini) to suggest schema mappings from a DDL or CSV file."""
+    from taa.infrastructure.schema_import import (
+        SchemaParser, LLMSchemaMapper, LLMMapperConfig, GapAnalyzer,
+    )
+    from taa.domain.value_objects.enums import TelcoDomain
+
+    container: Container = ctx.obj["container"]
+
+    parser = SchemaParser()
+    imported = parser.parse_file(file)
+    click.echo(f"Parsed {len(imported)} tables, {sum(len(t.columns) for t in imported)} columns")
+
+    # Load canonical
+    if domains:
+        domain_list = [TelcoDomain(d) for d in domains.split(",")]
+    else:
+        domain_list = list(TelcoDomain)
+    canonical = []
+    for domain in domain_list:
+        canonical.extend(container.domain_repo.load_tables(domain))
+    canonical_tables = tuple(canonical)
+
+    # Configure LLM
+    default_model = "claude-sonnet-4-20250514" if provider == "anthropic" else "gemini-pro"
+    config = LLMMapperConfig(provider=provider, model=model or default_model)
+    mapper = LLMSchemaMapper(config)
+
+    click.echo(f"Calling {provider} ({config.model})...")
+    try:
+        suggestions = mapper.suggest_mappings(imported, canonical_tables)
+    except (ValueError, RuntimeError) as e:
+        click.secho(f"Error: {e}", fg="red")
+        return
+
+    click.echo(f"AI suggested {len(suggestions)} mappings")
+
+    analyzer = GapAnalyzer()
+    report = analyzer.analyze(imported, canonical_tables, suggestions)
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(report.to_markdown())
+        click.echo(f"Report written to: {output}")
+    else:
+        for s in sorted(suggestions, key=lambda x: -x.confidence)[:20]:
+            click.echo(f"  {s.vendor_table}.{s.vendor_field} -> {s.canonical_table}.{s.canonical_field} ({s.confidence:.0%} {s.match_reason})")
+
+
+# --- Cost estimation commands ---
+
+@cli.command("estimate")
+@click.option("--domains", "-d", required=True, help="Comma-separated domain names")
+@click.option("--subscribers", "-s", default=1_000_000, type=int, help="Subscriber count")
+@click.option("--cdr-volume", "-c", default=500.0, type=float, help="Monthly CDR volume in GB")
+@click.option("--cloud", default="gcp", type=click.Choice(["gcp", "aws", "azure"]), help="Cloud provider")
+@click.option("--region", default="me-central1", help="Cloud region")
+@click.option("--retention", default=24, type=int, help="Data retention in months")
+@click.option("--output", "-o", default=None, type=click.Path(), help="Output file for cost report")
+@click.pass_context
+def estimate_cost(ctx: click.Context, domains: str, subscribers: int, cdr_volume: float,
+                  cloud: str, region: str, retention: int, output: str | None) -> None:
+    """Estimate cloud infrastructure costs for a TAA deployment."""
+    from taa.infrastructure.cost_estimation import CostEstimator
+    from taa.domain.value_objects.enums import TelcoDomain
+
+    container: Container = ctx.obj["container"]
+
+    all_tables = []
+    for domain_name in domains.split(","):
+        domain = TelcoDomain(domain_name)
+        all_tables.extend(container.domain_repo.load_tables(domain))
+
+    estimator = CostEstimator()
+    estimate = estimator.estimate(
+        tables=tuple(all_tables),
+        subscriber_count=subscribers,
+        monthly_cdr_volume_gb=cdr_volume,
+        cloud_provider=cloud,
+        region=region,
+        retention_months=retention,
+    )
+
+    click.echo(f"\n{'='*60}")
+    click.echo(f"  TAA Cost Estimate — {estimate.cloud_provider} ({estimate.region})")
+    click.echo(f"{'='*60}")
+    click.echo(f"  Subscribers: {estimate.subscriber_count:,}")
+    click.echo(f"  Monthly CDR: {estimate.monthly_cdr_volume_gb:,.0f} GB")
+    click.echo(f"{'='*60}")
+    for b in estimate.breakdowns:
+        click.echo(f"  {b.service:<25s} ${b.monthly_cost_usd:>10,.2f}/mo  ${b.annual_cost_usd:>12,.2f}/yr")
+    click.echo(f"  {'─'*55}")
+    click.echo(f"  {'TOTAL':<25s} ${estimate.total_monthly_usd:>10,.2f}/mo  ${estimate.total_annual_usd:>12,.2f}/yr")
+    click.echo()
+
+    if output:
+        out_path = Path(output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(estimate.to_markdown())
+        click.echo(f"Report written to: {output}")
+
+
 # --- MCP commands ---
 
 @cli.group()
