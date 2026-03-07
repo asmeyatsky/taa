@@ -1,0 +1,67 @@
+domain: product_catalogue
+tables:
+  - name: product
+    description: "Product catalogue master data"
+    columns:
+      - name: product_id
+        type: STRING
+        description: "Unique product identifier"
+        nullable: false
+      - name: product_name
+        type: STRING
+        description: "Product display name"
+        nullable: false
+      - name: product_type
+        type: STRING
+        description: "Product type (plan/addon/device/bundle)"
+      - name: category
+        type: STRING
+        description: "Product category"
+      - name: effective_date
+        type: DATE
+        description: "Product effective date"
+        nullable: false
+      - name: expiry_date
+        type: DATE
+        description: "Product expiry date"
+      - name: base_price
+        type: NUMERIC
+        description: "Base price"
+      - name: currency
+        type: STRING
+        description: "Price currency code"
+      - name: status
+        type: STRING
+        description: "Product status (active/retired)"
+        nullable: false
+
+  - name: product_offering
+    description: "Product offering with pricing tiers"
+    columns:
+      - name: offering_id
+        type: STRING
+        description: "Unique offering identifier"
+        nullable: false
+      - name: product_id
+        type: STRING
+        description: "Reference to product"
+        nullable: false
+      - name: offering_name
+        type: STRING
+        description: "Offering name"
+      - name: data_allowance_mb
+        type: INT64
+        description: "Data allowance in MB"
+      - name: voice_minutes
+        type: INT64
+        description: "Voice minutes included"
+      - name: sms_count
+        type: INT64
+        description: "SMS count included"
+      - name: price
+        type: NUMERIC
+        description: "Offering price"
+      - name: effective_date
+        type: DATE
+        description: "Offering effective date"
+        nullable: false

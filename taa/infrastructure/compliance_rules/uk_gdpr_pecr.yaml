@@ -1,0 +1,18 @@
+jurisdiction: GB
+framework: GDPR_PECR
+name: "UK GDPR and Privacy and Electronic Communications Regulations"
+rules:
+  - rule_id: GB-GDPR-001
+    description: "Personal data requires appropriate safeguards"
+    applicable_pii_categories: [msisdn, imsi, imei, email, name, address, date_of_birth, ip_address, location]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 24
+  - rule_id: GB-PECR-001
+    description: "Location data requires explicit consent tracking"
+    applicable_pii_categories: [location]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 12

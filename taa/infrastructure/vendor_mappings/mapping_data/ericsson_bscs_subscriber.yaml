@@ -1,0 +1,27 @@
+vendor: ericsson_bscs
+domain: subscriber
+mappings:
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_ID
+    canonical_table: subscriber_profile
+    canonical_field: subscriber_id
+    transformation: "CAST(CO_ID AS STRING)"
+    confidence: 0.90
+  - vendor_table: DIRECTORY_NUMBER
+    vendor_field: DN_NUM
+    canonical_table: subscriber_profile
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.90
+  - vendor_table: CUSTOMER_ALL
+    vendor_field: CUSTCODE
+    canonical_table: subscriber_profile
+    canonical_field: national_id
+    transformation: ""
+    confidence: 0.70
+  - vendor_table: CONTRACT_ALL
+    vendor_field: CO_ACTIVATED
+    canonical_table: subscriber_profile
+    canonical_field: activation_date
+    transformation: "DATE(CO_ACTIVATED)"
+    confidence: 0.90

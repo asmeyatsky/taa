@@ -1,0 +1,11 @@
+jurisdiction: KW
+framework: CITRA
+name: "Kuwait CITRA Telecommunications Regulations"
+rules:
+  - rule_id: KW-CITRA-001
+    description: "Telecom subscriber data must remain in Kuwait"
+    applicable_pii_categories: [msisdn, imsi, national_id, name]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 24

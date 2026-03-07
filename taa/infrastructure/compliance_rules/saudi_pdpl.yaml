@@ -1,0 +1,25 @@
+jurisdiction: SA
+framework: PDPL
+name: "Saudi Arabia Personal Data Protection Law"
+rules:
+  - rule_id: SA-PDPL-001
+    description: "PII data must be stored within Saudi Arabia"
+    applicable_pii_categories: [msisdn, imsi, imei, email, national_id, name, address, date_of_birth, ip_address, location]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 24
+  - rule_id: SA-PDPL-002
+    description: "Subscriber identity data requires encryption at rest"
+    applicable_pii_categories: [msisdn, imsi, national_id, name]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 36
+  - rule_id: SA-PDPL-003
+    description: "Location data requires special handling"
+    applicable_pii_categories: [location]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 12

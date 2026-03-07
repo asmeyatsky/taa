@@ -1,0 +1,23 @@
+variable "project_id" {
+  description = "GCP Project ID"
+  type        = string
+  default     = "{{ project_id }}"
+}
+
+variable "region" {
+  description = "GCP Region"
+  type        = string
+  default     = "{{ region }}"
+}
+
+variable "data_viewer_sa" {
+  description = "Service account for BigQuery data viewer role"
+  type        = string
+  default     = "taa-viewer@${var.project_id}.iam.gserviceaccount.com"
+}
+
+variable "data_editor_sa" {
+  description = "Service account for BigQuery data editor role"
+  type        = string
+  default     = "taa-editor@${var.project_id}.iam.gserviceaccount.com"
+}

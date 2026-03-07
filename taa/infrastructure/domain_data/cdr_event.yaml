@@ -1,0 +1,124 @@
+domain: cdr_event
+tables:
+  - name: voice_cdr
+    description: "Voice call detail records"
+    columns:
+      - name: cdr_id
+        type: STRING
+        description: "Unique CDR identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Calling subscriber identifier"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Calling MSISDN"
+        nullable: false
+      - name: called_number
+        type: STRING
+        description: "Called party number"
+      - name: event_date
+        type: DATE
+        description: "Call date"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "Call start timestamp"
+        nullable: false
+      - name: duration_seconds
+        type: INT64
+        description: "Call duration in seconds"
+      - name: event_type
+        type: STRING
+        description: "Call type (MO/MT/CF)"
+      - name: cell_id
+        type: STRING
+        description: "Originating cell ID"
+      - name: imei
+        type: STRING
+        description: "Device IMEI"
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge amount"
+      - name: discount_amount
+        type: NUMERIC
+        description: "Applied discount"
+
+  - name: data_cdr
+    description: "Data usage detail records"
+    columns:
+      - name: cdr_id
+        type: STRING
+        description: "Unique CDR identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Subscriber MSISDN"
+        nullable: false
+      - name: event_date
+        type: DATE
+        description: "Usage date"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "Session start timestamp"
+        nullable: false
+      - name: bytes_uploaded
+        type: INT64
+        description: "Bytes uploaded"
+      - name: bytes_downloaded
+        type: INT64
+        description: "Bytes downloaded"
+      - name: source_ip
+        type: STRING
+        description: "Source IP address"
+      - name: apn
+        type: STRING
+        description: "Access Point Name"
+      - name: cell_id
+        type: STRING
+        description: "Serving cell ID"
+      - name: imei
+        type: STRING
+        description: "Device IMEI"
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge amount"
+
+  - name: sms_cdr
+    description: "SMS detail records"
+    columns:
+      - name: cdr_id
+        type: STRING
+        description: "Unique CDR identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Sender MSISDN"
+        nullable: false
+      - name: called_number
+        type: STRING
+        description: "Recipient number"
+      - name: event_date
+        type: DATE
+        description: "SMS date"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "SMS timestamp"
+        nullable: false
+      - name: event_type
+        type: STRING
+        description: "SMS type (MO/MT)"
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated charge amount"

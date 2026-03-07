@@ -1,0 +1,33 @@
+vendor: huawei_cbs
+domain: subscriber
+mappings:
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: SUBSCRIBER_KEY
+    canonical_table: subscriber_profile
+    canonical_field: subscriber_id
+    transformation: "CAST(SUBSCRIBER_KEY AS STRING)"
+    confidence: 0.95
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: PRIMARY_IDENTITY
+    canonical_table: subscriber_profile
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.90
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: IMSI
+    canonical_table: subscriber_profile
+    canonical_field: imsi
+    transformation: ""
+    confidence: 0.99
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: CUST_NAME
+    canonical_table: subscriber_profile
+    canonical_field: first_name
+    transformation: "SPLIT(CUST_NAME, ' ')[OFFSET(0)]"
+    confidence: 0.75
+  - vendor_table: CBS_SUBSCRIBER
+    vendor_field: STATUS_CD
+    canonical_table: subscriber_profile
+    canonical_field: status
+    transformation: "CASE STATUS_CD WHEN 1 THEN 'active' WHEN 2 THEN 'suspended' WHEN 3 THEN 'terminated' END"
+    confidence: 0.85

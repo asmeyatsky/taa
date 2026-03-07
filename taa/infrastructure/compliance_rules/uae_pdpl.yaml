@@ -1,0 +1,18 @@
+jurisdiction: AE
+framework: PDPL
+name: "UAE Personal Data Protection Law"
+rules:
+  - rule_id: AE-PDPL-001
+    description: "Personal data must be processed within UAE"
+    applicable_pii_categories: [msisdn, imsi, imei, email, national_id, name, address, date_of_birth]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 24
+  - rule_id: AE-PDPL-002
+    description: "Emirates ID data requires enhanced protection"
+    applicable_pii_categories: [national_id]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 60

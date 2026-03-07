@@ -1,0 +1,97 @@
+domain: subscriber
+tables:
+  - name: subscriber_profile
+    description: "Core subscriber profile and lifecycle data"
+    columns:
+      - name: subscriber_id
+        type: STRING
+        description: "Unique subscriber identifier"
+        nullable: false
+      - name: msisdn
+        type: STRING
+        description: "Mobile subscriber ISDN number"
+        nullable: false
+      - name: imsi
+        type: STRING
+        description: "International Mobile Subscriber Identity"
+        nullable: false
+      - name: imei
+        type: STRING
+        description: "International Mobile Equipment Identity"
+      - name: first_name
+        type: STRING
+        description: "Subscriber first name"
+      - name: last_name
+        type: STRING
+        description: "Subscriber last name"
+      - name: email
+        type: STRING
+        description: "Contact email address"
+      - name: national_id
+        type: STRING
+        description: "National identification number"
+      - name: date_of_birth
+        type: DATE
+        description: "Subscriber date of birth"
+      - name: address
+        type: STRING
+        description: "Subscriber address"
+      - name: activation_date
+        type: DATE
+        description: "Service activation date"
+        nullable: false
+      - name: status
+        type: STRING
+        description: "Subscriber status (active/suspended/terminated)"
+        nullable: false
+      - name: subscriber_type
+        type: STRING
+        description: "Postpaid or prepaid"
+      - name: credit_class
+        type: STRING
+        description: "Credit classification"
+      - name: language_preference
+        type: STRING
+        description: "Preferred language"
+      - name: created_at
+        type: TIMESTAMP
+        description: "Record creation timestamp"
+        nullable: false
+      - name: updated_at
+        type: TIMESTAMP
+        description: "Record last update timestamp"
+
+  - name: subscriber_contract
+    description: "Subscriber contract and commitment details"
+    columns:
+      - name: contract_id
+        type: STRING
+        description: "Unique contract identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Reference to subscriber"
+        nullable: false
+      - name: plan_id
+        type: STRING
+        description: "Associated plan identifier"
+      - name: start_date
+        type: DATE
+        description: "Contract start date"
+        nullable: false
+      - name: end_date
+        type: DATE
+        description: "Contract end date"
+      - name: commitment_months
+        type: INT64
+        description: "Contract commitment period in months"
+      - name: monthly_fee
+        type: NUMERIC
+        description: "Monthly recurring fee"
+      - name: status
+        type: STRING
+        description: "Contract status"
+      - name: activation_date
+        type: DATE
+        description: "Contract activation date"
+        nullable: false

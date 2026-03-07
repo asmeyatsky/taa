@@ -1,0 +1,11 @@
+jurisdiction: EG
+framework: NTRA
+name: "Egypt NTRA Telecommunications Regulations"
+rules:
+  - rule_id: EG-NTRA-001
+    description: "Subscriber data must be stored in Egypt"
+    applicable_pii_categories: [msisdn, imsi, national_id, name, address]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 36

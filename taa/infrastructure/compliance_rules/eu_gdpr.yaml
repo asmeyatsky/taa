@@ -1,0 +1,18 @@
+jurisdiction: EU
+framework: GDPR
+name: "European Union General Data Protection Regulation"
+rules:
+  - rule_id: EU-GDPR-001
+    description: "Personal data processing requires lawful basis"
+    applicable_pii_categories: [msisdn, imsi, imei, email, name, address, date_of_birth, ip_address, location]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 24
+  - rule_id: EU-GDPR-002
+    description: "Special category data requires additional safeguards"
+    applicable_pii_categories: [location, ip_address]
+    data_residency_required: false
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 12

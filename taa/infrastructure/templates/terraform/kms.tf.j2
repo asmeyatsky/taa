@@ -1,0 +1,20 @@
+{# KMS key configuration for datasets requiring encryption #}
+{% for dataset in datasets %}
+{% if dataset.requires_encryption() %}
+resource "google_kms_key_ring" "{{ dataset.name }}_keyring" {
+  name     = "{{ dataset.name }}-keyring"
+  location = "{{ dataset.gcp_region }}"
+}
+
+resource "google_kms_crypto_key" "{{ dataset.name }}_key" {
+  name            = "{{ dataset.name }}-key"
+  key_ring        = google_kms_key_ring.{{ dataset.name }}_keyring.id
+  rotation_period = "{{ kms_rotation_seconds }}s"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+{% endif %}
+{% endfor %}

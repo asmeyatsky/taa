@@ -1,0 +1,33 @@
+vendor: oracle_brm
+domain: subscriber
+mappings:
+  - vendor_table: ACCOUNT_T
+    vendor_field: POID_ID0
+    canonical_table: subscriber_profile
+    canonical_field: subscriber_id
+    transformation: "CAST(POID_ID0 AS STRING)"
+    confidence: 0.90
+  - vendor_table: SERVICE_T
+    vendor_field: LOGIN
+    canonical_table: subscriber_profile
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.85
+  - vendor_table: NAMEINFO_T
+    vendor_field: FIRST_NAME
+    canonical_table: subscriber_profile
+    canonical_field: first_name
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: NAMEINFO_T
+    vendor_field: LAST_NAME
+    canonical_table: subscriber_profile
+    canonical_field: last_name
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: ACCOUNT_T
+    vendor_field: STATUS
+    canonical_table: subscriber_profile
+    canonical_field: status
+    transformation: "CASE STATUS WHEN 10100 THEN 'active' WHEN 10102 THEN 'suspended' WHEN 10103 THEN 'terminated' END"
+    confidence: 0.90

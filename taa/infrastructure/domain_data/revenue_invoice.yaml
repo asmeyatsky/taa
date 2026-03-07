@@ -1,0 +1,102 @@
+domain: revenue_invoice
+tables:
+  - name: invoice
+    description: "Billing invoice records"
+    columns:
+      - name: invoice_id
+        type: STRING
+        description: "Unique invoice identifier"
+        nullable: false
+      - name: account_id
+        type: STRING
+        description: "Billing account identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Subscriber identifier"
+      - name: bill_cycle_date
+        type: DATE
+        description: "Billing cycle date"
+        nullable: false
+      - name: invoice_date
+        type: DATE
+        description: "Invoice generation date"
+      - name: due_date
+        type: DATE
+        description: "Payment due date"
+      - name: total_amount
+        type: NUMERIC
+        description: "Total invoice amount"
+      - name: tax_amount
+        type: NUMERIC
+        description: "Tax amount"
+      - name: currency
+        type: STRING
+        description: "Currency code"
+      - name: invoice_type
+        type: STRING
+        description: "Invoice type (regular/adjustment/credit)"
+      - name: status
+        type: STRING
+        description: "Invoice status (open/paid/overdue)"
+        nullable: false
+
+  - name: invoice_line_item
+    description: "Invoice line item details"
+    columns:
+      - name: line_item_id
+        type: STRING
+        description: "Unique line item identifier"
+        nullable: false
+      - name: invoice_id
+        type: STRING
+        description: "Reference to invoice"
+        nullable: false
+      - name: charge_type
+        type: STRING
+        description: "Charge type (recurring/usage/one-time)"
+      - name: description
+        type: STRING
+        description: "Line item description"
+      - name: amount
+        type: NUMERIC
+        description: "Line item amount"
+      - name: quantity
+        type: INT64
+        description: "Quantity"
+      - name: bill_cycle_date
+        type: DATE
+        description: "Billing cycle date"
+        nullable: false
+
+  - name: payment
+    description: "Payment transaction records"
+    columns:
+      - name: payment_id
+        type: STRING
+        description: "Unique payment identifier"
+        nullable: false
+      - name: account_id
+        type: STRING
+        description: "Billing account identifier"
+        nullable: false
+      - name: invoice_id
+        type: STRING
+        description: "Reference to invoice"
+      - name: payment_date
+        type: DATE
+        description: "Payment date"
+        nullable: false
+      - name: amount
+        type: NUMERIC
+        description: "Payment amount"
+      - name: payment_method
+        type: STRING
+        description: "Payment method"
+      - name: status
+        type: STRING
+        description: "Payment status"
+      - name: bill_cycle_date
+        type: DATE
+        description: "Associated billing cycle"
+        nullable: false

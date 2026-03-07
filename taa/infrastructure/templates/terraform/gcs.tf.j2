@@ -1,0 +1,40 @@
+{# GCS buckets for staging and temporary data #}
+resource "google_storage_bucket" "staging" {
+  name          = "${var.project_id}-taa-staging"
+  location      = "{{ region }}"
+  force_destroy = false
+  storage_class = "STANDARD"
+
+  uniform_bucket_level_access = true
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age = 30
+    }
+  }
+}
+
+resource "google_storage_bucket" "temp" {
+  name          = "${var.project_id}-taa-temp"
+  location      = "{{ region }}"
+  force_destroy = true
+  storage_class = "STANDARD"
+
+  uniform_bucket_level_access = true
+
+  lifecycle_rule {
+    action {
+      type = "Delete"
+    }
+    condition {
+      age = 7
+    }
+  }
+}

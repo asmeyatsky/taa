@@ -1,0 +1,39 @@
+vendor: amdocs
+domain: cdr_event
+mappings:
+  - vendor_table: CDR_VOICE
+    vendor_field: CDR_SEQ_NO
+    canonical_table: voice_cdr
+    canonical_field: cdr_id
+    transformation: "CAST(CDR_SEQ_NO AS STRING)"
+    confidence: 0.99
+  - vendor_table: CDR_VOICE
+    vendor_field: A_PARTY_NUM
+    canonical_table: voice_cdr
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: CDR_VOICE
+    vendor_field: B_PARTY_NUM
+    canonical_table: voice_cdr
+    canonical_field: called_number
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: CDR_VOICE
+    vendor_field: CALL_START_DT
+    canonical_table: voice_cdr
+    canonical_field: event_date
+    transformation: "DATE(CALL_START_DT)"
+    confidence: 0.95
+  - vendor_table: CDR_VOICE
+    vendor_field: CALL_DURATION
+    canonical_table: voice_cdr
+    canonical_field: duration_seconds
+    transformation: ""
+    confidence: 0.99
+  - vendor_table: CDR_VOICE
+    vendor_field: RATED_AMT
+    canonical_table: voice_cdr
+    canonical_field: rated_amount
+    transformation: ""
+    confidence: 0.95

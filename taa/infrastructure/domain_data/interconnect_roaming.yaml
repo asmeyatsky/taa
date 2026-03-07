@@ -1,0 +1,81 @@
+domain: interconnect_roaming
+tables:
+  - name: interconnect_cdr
+    description: "Interconnect call detail records"
+    columns:
+      - name: record_id
+        type: STRING
+        description: "Unique record identifier"
+        nullable: false
+      - name: partner_operator
+        type: STRING
+        description: "Partner operator code"
+        nullable: false
+      - name: direction
+        type: STRING
+        description: "Direction (inbound/outbound)"
+        nullable: false
+      - name: calling_number
+        type: STRING
+        description: "Calling party number"
+      - name: called_number
+        type: STRING
+        description: "Called party number"
+      - name: event_date
+        type: DATE
+        description: "Event date"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "Event timestamp"
+      - name: duration_seconds
+        type: INT64
+        description: "Duration in seconds"
+      - name: rated_amount
+        type: NUMERIC
+        description: "Rated interconnect amount"
+      - name: settlement_amount
+        type: NUMERIC
+        description: "Settlement amount"
+      - name: currency
+        type: STRING
+        description: "Settlement currency"
+
+  - name: roaming_event
+    description: "Roaming usage events (TAP/RAP)"
+    columns:
+      - name: event_id
+        type: STRING
+        description: "Unique event identifier"
+        nullable: false
+      - name: subscriber_id
+        type: STRING
+        description: "Roaming subscriber identifier"
+      - name: msisdn
+        type: STRING
+        description: "Roaming MSISDN"
+      - name: visited_network
+        type: STRING
+        description: "Visited PLMN code"
+      - name: event_type
+        type: STRING
+        description: "Event type (voice/data/sms)"
+      - name: event_date
+        type: DATE
+        description: "Event date"
+        nullable: false
+      - name: event_timestamp
+        type: TIMESTAMP
+        description: "Event timestamp"
+      - name: duration_seconds
+        type: INT64
+        description: "Duration in seconds"
+      - name: bytes_transferred
+        type: INT64
+        description: "Data bytes transferred"
+      - name: tap_amount
+        type: NUMERIC
+        description: "TAP charge amount"
+      - name: currency
+        type: STRING
+        description: "TAP currency"

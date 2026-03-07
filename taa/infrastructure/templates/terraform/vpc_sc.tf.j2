@@ -1,0 +1,19 @@
+{# VPC Service Controls for data residency #}
+{% if has_residency_requirement %}
+resource "google_access_context_manager_service_perimeter" "taa_perimeter" {
+  parent = "accessPolicies/${var.access_policy_id}"
+  name   = "accessPolicies/${var.access_policy_id}/servicePerimeters/taa_perimeter"
+  title  = "TAA Data Perimeter"
+
+  status {
+    restricted_services = [
+      "bigquery.googleapis.com",
+      "storage.googleapis.com",
+    ]
+
+    resources = [
+      "projects/${var.project_number}",
+    ]
+  }
+}
+{% endif %}

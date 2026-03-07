@@ -1,0 +1,27 @@
+vendor: huawei_cbs
+domain: cdr_event
+mappings:
+  - vendor_table: CBS_CDR
+    vendor_field: SERIAL_NO
+    canonical_table: voice_cdr
+    canonical_field: cdr_id
+    transformation: "CAST(SERIAL_NO AS STRING)"
+    confidence: 0.95
+  - vendor_table: CBS_CDR
+    vendor_field: CALLING_PARTY
+    canonical_table: voice_cdr
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.90
+  - vendor_table: CBS_CDR
+    vendor_field: CALLED_PARTY
+    canonical_table: voice_cdr
+    canonical_field: called_number
+    transformation: ""
+    confidence: 0.90
+  - vendor_table: CBS_CDR
+    vendor_field: START_TIME
+    canonical_table: voice_cdr
+    canonical_field: event_date
+    transformation: "DATE(START_TIME)"
+    confidence: 0.90

@@ -1,0 +1,25 @@
+{# BigQuery dataset Terraform resources #}
+{% for dataset in datasets %}
+resource "google_bigquery_dataset" "{{ dataset.name }}" {
+  dataset_id                 = "{{ dataset.name }}"
+  friendly_name             = "{{ dataset.name }}"
+  description               = "{{ dataset.telco_domain.value }} domain dataset"
+  location                  = "{{ dataset.gcp_region | upper }}"
+  delete_contents_on_destroy = false
+
+{% if dataset.requires_encryption() %}
+  default_encryption_configuration {
+    kms_key_name = google_kms_crypto_key.{{ dataset.name }}_key.id
+  }
+{% endif %}
+
+  labels = {
+    domain       = "{{ dataset.telco_domain.value }}"
+    managed_by   = "taa"
+{% if dataset.jurisdiction %}
+    jurisdiction = "{{ dataset.jurisdiction.code | lower }}"
+{% endif %}
+  }
+}
+
+{% endfor %}

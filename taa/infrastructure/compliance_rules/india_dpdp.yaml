@@ -1,0 +1,18 @@
+jurisdiction: IN
+framework: DPDP
+name: "India Digital Personal Data Protection Act"
+rules:
+  - rule_id: IN-DPDP-001
+    description: "Personal data of Indian citizens must be stored in India"
+    applicable_pii_categories: [msisdn, imsi, imei, email, national_id, name, address, date_of_birth]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 90
+    retention_months: 36
+  - rule_id: IN-DPDP-002
+    description: "Aadhaar and identity data requires enhanced protection"
+    applicable_pii_categories: [national_id]
+    data_residency_required: true
+    encryption_required: true
+    kms_rotation_days: 30
+    retention_months: 60

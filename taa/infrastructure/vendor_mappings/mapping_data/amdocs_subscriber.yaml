@@ -1,0 +1,51 @@
+vendor: amdocs
+domain: subscriber
+mappings:
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: SUB_ID
+    canonical_table: subscriber_profile
+    canonical_field: subscriber_id
+    transformation: "CAST(SUB_ID AS STRING)"
+    confidence: 0.99
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: MSISDN
+    canonical_table: subscriber_profile
+    canonical_field: msisdn
+    transformation: ""
+    confidence: 0.99
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: IMSI_NUM
+    canonical_table: subscriber_profile
+    canonical_field: imsi
+    transformation: ""
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: FIRST_NM
+    canonical_table: subscriber_profile
+    canonical_field: first_name
+    transformation: "TRIM(FIRST_NM)"
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: LAST_NM
+    canonical_table: subscriber_profile
+    canonical_field: last_name
+    transformation: "TRIM(LAST_NM)"
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: EMAIL_ADDR
+    canonical_table: subscriber_profile
+    canonical_field: email
+    transformation: "LOWER(EMAIL_ADDR)"
+    confidence: 0.90
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: ACTIVATION_DT
+    canonical_table: subscriber_profile
+    canonical_field: activation_date
+    transformation: "PARSE_DATE('%Y%m%d', ACTIVATION_DT)"
+    confidence: 0.95
+  - vendor_table: CM_SUBSCRIBER
+    vendor_field: SUB_STATUS
+    canonical_table: subscriber_profile
+    canonical_field: status
+    transformation: "CASE SUB_STATUS WHEN 'A' THEN 'active' WHEN 'S' THEN 'suspended' WHEN 'T' THEN 'terminated' END"
+    confidence: 0.90

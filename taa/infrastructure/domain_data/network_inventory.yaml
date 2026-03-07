@@ -1,0 +1,76 @@
+domain: network_inventory
+tables:
+  - name: network_element
+    description: "Network element inventory"
+    columns:
+      - name: element_id
+        type: STRING
+        description: "Unique network element identifier"
+        nullable: false
+      - name: element_name
+        type: STRING
+        description: "Element name"
+      - name: element_type
+        type: STRING
+        description: "Element type (BTS/NodeB/eNodeB/gNodeB)"
+        nullable: false
+      - name: vendor
+        type: STRING
+        description: "Equipment vendor"
+      - name: region
+        type: STRING
+        description: "Network region"
+      - name: latitude
+        type: FLOAT64
+        description: "Site latitude"
+      - name: longitude
+        type: FLOAT64
+        description: "Site longitude"
+      - name: capacity
+        type: INT64
+        description: "Element capacity"
+      - name: status
+        type: STRING
+        description: "Element status (active/planned/decommissioned)"
+      - name: snapshot_date
+        type: DATE
+        description: "Inventory snapshot date"
+        nullable: false
+
+  - name: cell_site
+    description: "Cell site configuration"
+    columns:
+      - name: site_id
+        type: STRING
+        description: "Unique site identifier"
+        nullable: false
+      - name: site_name
+        type: STRING
+        description: "Site name"
+      - name: element_id
+        type: STRING
+        description: "Parent network element"
+        nullable: false
+      - name: cell_id
+        type: STRING
+        description: "Cell identifier"
+        nullable: false
+      - name: technology
+        type: STRING
+        description: "Technology (2G/3G/4G/5G)"
+      - name: frequency_band
+        type: STRING
+        description: "Frequency band"
+      - name: azimuth
+        type: INT64
+        description: "Antenna azimuth in degrees"
+      - name: latitude
+        type: FLOAT64
+        description: "Cell latitude"
+      - name: longitude
+        type: FLOAT64
+        description: "Cell longitude"
+      - name: snapshot_date
+        type: DATE
+        description: "Snapshot date"
+        nullable: false

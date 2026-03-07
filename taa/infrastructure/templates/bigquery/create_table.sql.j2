@@ -1,0 +1,18 @@
+{# BigQuery CREATE TABLE DDL template #}
+CREATE TABLE IF NOT EXISTS `{{ project_id }}.{{ dataset_name }}.{{ table.name }}`
+(
+{% for col in table.columns %}
+  {{ col.name }} {{ col.bigquery_type.value }}{% if not col.nullable %} NOT NULL{% endif %}{% if col.policy_tag %} OPTIONS(policy_tags=["{{ col.policy_tag }}"]){% endif %}{% if col.description %} OPTIONS(description="{{ col.description }}"){% endif %}{% if not loop.last %},{% endif %}
+
+{% endfor %}
+)
+{% if table.partitioning %}
+PARTITION BY {% if table.partitioning.partition_type == "DAY" %}DATE_TRUNC({{ table.partitioning.column_name }}, DAY){% elif table.partitioning.partition_type == "MONTH" %}DATE_TRUNC({{ table.partitioning.column_name }}, MONTH){% else %}{{ table.partitioning.column_name }}{% endif %}
+
+{% endif %}
+{% if table.clustering %}
+CLUSTER BY {{ table.clustering.column_names | join(", ") }}
+{% endif %}
+OPTIONS(
+  description="{{ table.name }} table for {{ table.telco_domain.value }} domain"
+);
