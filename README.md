@@ -100,6 +100,9 @@ taa estimate -d subscriber,cdr_event -s 5000000 --cloud gcp
 | `taa generate analytics` | Generate analytics SQL (BQML / Vertex AI) | `taa generate analytics -t churn_prediction -o ./output` |
 | `taa generate aws` | Generate AWS artefacts (Redshift DDL + CloudFormation) | `taa generate aws -d subscriber -j SA -o ./output` |
 | `taa generate azure` | Generate Azure artefacts (Synapse DDL + Bicep) | `taa generate azure -d subscriber -j SA -o ./output` |
+| `taa generate mock-data` | Generate synthetic BSS test data | `taa generate mock-data -d subscriber -r 100 --seed 42 -o ./output` |
+| `taa generate notebook` | Generate Vertex AI / Jupyter notebooks | `taa generate notebook -t churn_prediction -o ./output` |
+| `taa generate dashboard` | Generate Looker Studio dashboard configs | `taa generate dashboard -t revenue_assurance -o ./output` |
 | `taa generate pack` | Generate full artefact pack | `taa generate pack -d subscriber,cdr_event -j SA -v amdocs -o ./output` |
 
 ### Schema Import
@@ -196,6 +199,15 @@ Estimate monthly and annual cloud infrastructure costs based on subscriber count
 
 ### Analytics Templates
 Generate BigQuery ML and Vertex AI SQL templates for common telco analytics use cases: churn prediction, revenue leakage, ARPU analysis, network quality, and 5G monetization.
+
+### Vertex AI Notebooks
+Generate production-ready Jupyter notebooks (.ipynb) for churn prediction, revenue leakage detection, and subscriber lifetime value models using BigQuery ML.
+
+### Looker Studio Dashboards
+Generate dashboard configuration JSON files for 4 pre-built dashboards: Revenue Assurance, Churn Analytics, 5G Monetisation, and Roaming & Interconnect.
+
+### Mock Data Generator
+Generate synthetic BSS test data (CSV or JSONL) for any domain, with PII-aware data generation, configurable row counts, and reproducible seeds for demo and testing.
 
 ## Development
 

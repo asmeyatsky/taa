@@ -406,6 +406,96 @@ def generate_quality(ctx: click.Context, domains: str, freshness_hours: int,
         click.echo(f"  {f}")
 
 
+@generate.command("mock-data")
+@click.option("--domains", "-d", required=True, help="Comma-separated domain names")
+@click.option("--rows", "-r", default=100, type=int, help="Number of rows per table")
+@click.option("--format", "-f", "fmt", default="csv", type=click.Choice(["csv", "jsonl"]), help="Output format")
+@click.option("--seed", default=None, type=int, help="Random seed for reproducibility")
+@click.option("--output", "-o", default="./output", type=click.Path(), help="Output directory")
+@click.pass_context
+def generate_mock_data(ctx: click.Context, domains: str, rows: int, fmt: str,
+                       seed: int | None, output: str) -> None:
+    """Generate synthetic BSS test data for demo and testing."""
+    from taa.infrastructure.generators.mock_data import MockDataGenerator
+    from taa.domain.value_objects.enums import TelcoDomain
+
+    container: Container = ctx.obj["container"]
+    gen = MockDataGenerator(seed=seed)
+    writer = container.output_writer
+    output_dir = Path(output) / "mock_data"
+    files: list[str] = []
+
+    for domain_name in domains.split(","):
+        domain = TelcoDomain(domain_name)
+        tables = container.domain_repo.load_tables(domain)
+        enriched = tuple(
+            type(t)(name=t.name, telco_domain=t.telco_domain,
+                   columns=container.pii_service.enrich_columns(t.columns),
+                   partitioning=t.partitioning, clustering=t.clustering, dataset_name=t.dataset_name)
+            for t in tables
+        )
+        data_files = gen.generate_all(enriched, row_count=rows, fmt=fmt)
+        domain_dir = output_dir / domain.value
+        written = writer.write_multiple(data_files, domain_dir)
+        files.extend(str(p) for p in written)
+
+    click.echo(f"Success: Generated {len(files)} mock data file(s) ({rows} rows each)")
+    for f in files:
+        click.echo(f"  {f}")
+
+
+@generate.command("notebook")
+@click.option("--template", "-t", default=None, help="Specific notebook (churn_prediction, revenue_leakage, subscriber_ltv)")
+@click.option("--output", "-o", default="./output", type=click.Path(), help="Output directory")
+@click.pass_context
+def generate_notebook(ctx: click.Context, template: str | None, output: str) -> None:
+    """Generate Vertex AI / Jupyter notebook (.ipynb) files."""
+    from taa.infrastructure.generators.notebook import NotebookGenerator
+
+    container: Container = ctx.obj["container"]
+    gen = NotebookGenerator(project_id=container._project_id)
+    output_dir = Path(output) / "notebooks"
+    writer = container.output_writer
+
+    if template:
+        content = gen.generate(template)
+        path = output_dir / f"{template}.ipynb"
+        writer.write(path, content)
+        click.echo(f"Generated: {path}")
+    else:
+        all_notebooks = gen.generate_all()
+        written = writer.write_multiple(all_notebooks, output_dir)
+        for p in written:
+            click.echo(f"Generated: {p}")
+        click.echo(f"Success: Generated {len(written)} notebook(s)")
+
+
+@generate.command("dashboard")
+@click.option("--template", "-t", default=None, help="Specific dashboard (revenue_assurance, churn_analytics, five_g_monetisation, roaming_interconnect)")
+@click.option("--output", "-o", default="./output", type=click.Path(), help="Output directory")
+@click.pass_context
+def generate_dashboard(ctx: click.Context, template: str | None, output: str) -> None:
+    """Generate Looker Studio dashboard configurations."""
+    from taa.infrastructure.generators.looker import LookerDashboardGenerator
+
+    container: Container = ctx.obj["container"]
+    gen = LookerDashboardGenerator(project_id=container._project_id)
+    output_dir = Path(output) / "dashboards"
+    writer = container.output_writer
+
+    if template:
+        content = gen.generate(template)
+        path = output_dir / f"{template}_dashboard.json"
+        writer.write(path, content)
+        click.echo(f"Generated: {path}")
+    else:
+        all_dashboards = gen.generate_all()
+        written = writer.write_multiple(all_dashboards, output_dir)
+        for p in written:
+            click.echo(f"Generated: {p}")
+        click.echo(f"Success: Generated {len(written)} dashboard(s)")
+
+
 @generate.command("pack")
 @click.option("--domains", "-d", required=True, help="Comma-separated domain names")
 @click.option("--jurisdiction", "-j", default="SA", help="Jurisdiction code")
@@ -762,6 +852,24 @@ def mcp_serve(host: str, port: int) -> None:
     server = create_server()
     import asyncio
     asyncio.run(server.run_stdio())
+
+
+# --- API server command ---
+
+@cli.command("serve")
+@click.option("--host", default="localhost", help="Host to bind to")
+@click.option("--port", default=8000, type=int, help="Port to bind to")
+@click.option("--reload", is_flag=True, default=False, help="Enable auto-reload for development")
+def serve_api(host: str, port: int, reload: bool) -> None:
+    """Start the TAA API server (FastAPI)."""
+    try:
+        import uvicorn
+    except ImportError:
+        click.secho("uvicorn not installed. Run: pip install taa[api]", fg="red")
+        return
+    click.echo(f"Starting TAA API server on http://{host}:{port}")
+    click.echo(f"Swagger docs at http://{host}:{port}/docs")
+    uvicorn.run("taa.presentation.api.app:app", host=host, port=port, reload=reload)
 
 
 def _print_result(result) -> None:

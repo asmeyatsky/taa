@@ -60,6 +60,38 @@
   - Scales estimates with subscriber count and CDR volume
   - CLI: `taa estimate -d subscriber,cdr_event -s 5000000 -c 2000 --cloud gcp`
 
+## Post-Completion Fixes
+
+- [x] 14. MCP `read_resource` deprecation warnings fixed
+  - Changed return type from `str` to `list[ReadResourceContents]` with `mime_type="application/json"`
+  - All 20 deprecation warnings eliminated
+  - 68 MCP tests passing with 0 warnings
+- [x] 15. Audit scorecard updated to reflect final state
+  - `audit0703.md` fully updated with PRD gap analysis
+  - Remaining gaps documented (Phase 6 UI)
+- [x] 16. PRD gap analysis completed
+  - Phases 0-5 fully implemented
+  - Phase 6 (React UI, demo script) not started — documented as out of scope for CLI-first delivery
+  - Germany/France coverage confirmed via EU GDPR jurisdiction
+
+## PRD Gap Closure (Phase 5 Completion)
+
+- [x] 17. Mock data generators
+  - Synthetic BSS test data generation per domain/table
+  - PII-aware generators (MSISDN, IMSI, IMEI, email, names, addresses)
+  - CSV and JSONL output formats with configurable row counts
+  - Reproducible via seed parameter
+  - CLI: `taa generate mock-data -d subscriber -r 100 --seed 42`
+- [x] 18. Vertex AI / Jupyter notebooks (.ipynb)
+  - 3 production notebooks: churn_prediction, revenue_leakage, subscriber_ltv
+  - Valid .ipynb format with markdown + code cells
+  - BigQuery ML feature engineering, model training, evaluation, and prediction
+  - CLI: `taa generate notebook -t churn_prediction`
+- [x] 19. Looker Studio dashboard configurations
+  - 4 dashboard JSON configs: revenue_assurance, churn_analytics, five_g_monetisation, roaming_interconnect
+  - Data source definitions, chart configurations, and BigQuery SQL queries
+  - CLI: `taa generate dashboard -t revenue_assurance`
+
 ## Summary
 
 | Metric | Before | After |
@@ -73,5 +105,10 @@
 | Terraform files | 7 | 12 |
 | Dataflow templates | 5 stubs | 5 production (1,794 lines) |
 | Cloud providers | 1 (GCP) | 3 (GCP, AWS, Azure) |
-| Tests passing | 149 | 194 |
+| Tests passing | 149 | 360 |
+| Test warnings | 20 | 0 |
+| Looker dashboards | 0 | 4 |
+| Vertex AI notebooks | 0 | 3 |
+| Mock data generator | No | Yes (CSV + JSONL) |
+| CLI commands | 14 | 17 |
 | Audit items complete | 0/13 | 13/13 |

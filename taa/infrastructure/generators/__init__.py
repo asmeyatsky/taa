@@ -14,6 +14,9 @@ from taa.infrastructure.generators.multicloud_ddl import (
 )
 from taa.infrastructure.generators.schema_migration import SchemaMigrationGenerator
 from taa.infrastructure.generators.data_quality import DataQualityGenerator
+from taa.infrastructure.generators.mock_data import MockDataGenerator
+from taa.infrastructure.generators.notebook import NotebookGenerator
+from taa.infrastructure.generators.looker import LookerDashboardGenerator
 
 __all__ = [
     "BigQueryDDLGenerator",
@@ -28,4 +31,7 @@ __all__ = [
     "AzureBicepGenerator",
     "SchemaMigrationGenerator",
     "DataQualityGenerator",
+    "MockDataGenerator",
+    "NotebookGenerator",
+    "LookerDashboardGenerator",
 ]

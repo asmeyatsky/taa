@@ -14,6 +14,7 @@ def create_server():
     """Create and configure the TAA MCP server."""
     try:
         from mcp.server import Server
+        from mcp.server.lowlevel.helper_types import ReadResourceContents
         from mcp.types import Tool, Resource, TextContent
     except ImportError:
         raise ImportError("mcp package required. Install with: pip install mcp")
@@ -114,36 +115,38 @@ def create_server():
         ]
 
     @server.read_resource()
-    async def read_resource(uri: str) -> str:
+    async def read_resource(uri: str) -> list[ReadResourceContents]:
         uri = str(uri)
         if uri == "taa://domains":
             domains = container.list_domains.execute()
-            return json.dumps([d.model_dump() for d in domains], indent=2)
+            text = json.dumps([d.model_dump() for d in domains], indent=2)
         elif uri == "taa://vendors":
             vendors = container.list_vendors.execute()
-            return json.dumps([v.model_dump() for v in vendors], indent=2)
+            text = json.dumps([v.model_dump() for v in vendors], indent=2)
         elif uri == "taa://jurisdictions":
             jurisdictions = container.list_jurisdictions.execute()
-            return json.dumps([j.model_dump() for j in jurisdictions], indent=2)
+            text = json.dumps([j.model_dump() for j in jurisdictions], indent=2)
         elif uri == "taa://pii-categories":
             categories = [{"name": c.value, "description": c.name} for c in PIICategory]
-            return json.dumps(categories, indent=2)
+            text = json.dumps(categories, indent=2)
         elif uri.startswith("taa://domains/"):
             domain_name = uri.split("/")[-1]
             info = container.get_domain_model.execute(domain_name)
-            return info.model_dump_json(indent=2)
+            text = info.model_dump_json(indent=2)
         elif uri.startswith("taa://vendors/") and "/mappings/" in uri:
             parts = uri.replace("taa://vendors/", "").split("/mappings/")
             result = container.map_vendor_schema.execute(parts[0], parts[1])
-            return result.model_dump_json(indent=2)
+            text = result.model_dump_json(indent=2)
         elif uri.startswith("taa://jurisdictions/") and "/rules" in uri:
             jcode = uri.replace("taa://jurisdictions/", "").replace("/rules", "")
             rules = container.compliance_rule_repo.load_rules(jcode)
-            return json.dumps([{
+            text = json.dumps([{
                 "rule_id": r.rule_id, "framework": r.framework,
                 "data_residency_required": r.data_residency_required,
                 "encryption_required": r.encryption_required,
             } for r in rules], indent=2)
-        return json.dumps({"error": f"Unknown resource: {uri}"})
+        else:
+            text = json.dumps({"error": f"Unknown resource: {uri}"})
+        return [ReadResourceContents(content=text, mime_type="application/json")]
 
     return server
