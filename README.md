@@ -4,39 +4,7 @@ Production-ready code generation tool that transforms telco BSS/OSS configuratio
 
 ## Architecture
 
-```mermaid
-graph TB
-    CLI[CLI - Click] --> App[Application Layer]
-    MCP[MCP Server] --> App
-
-    App --> Domain[Domain Layer]
-    App --> Generators[Infrastructure Generators]
-
-    Domain --> Entities[Entities: Dataset, Table, Column, VendorMapping]
-    Domain --> ValueObjects[Value Objects: TelcoDomain, BSSVendor, Jurisdiction]
-    Domain --> Ports[Ports / Interfaces]
-
-    Generators --> TF[Terraform Generator]
-    Generators --> DDL[DDL Generator]
-    Generators --> Pipeline[Dataflow Pipeline Generator]
-    Generators --> DAG[Airflow DAG Generator]
-    Generators --> Compliance[Compliance Report Generator]
-    Generators --> Analytics[Analytics Template Generator]
-    Generators --> MultiCloud[Multi-Cloud: AWS / Azure]
-
-    TF --> Templates[Jinja2 Templates]
-    DDL --> Templates
-    Pipeline --> Templates
-    DAG --> Templates
-
-    App --> SchemaImport[Schema Import]
-    SchemaImport --> Parser[DDL / CSV Parser]
-    SchemaImport --> VendorDetect[Vendor Auto-Detector]
-    SchemaImport --> AIMap[AI Mapper - Claude / Gemini]
-    SchemaImport --> BSSConn[BSS Connector]
-
-    App --> CostEst[Cost Estimator]
-```
+![TAA Architecture — Legacy BSS to Google Cloud AI Path](docs/architecture.jpg)
 
 ## Quick Start
 

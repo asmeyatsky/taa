@@ -11,6 +11,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from taa import __version__
@@ -114,6 +115,7 @@ def create_app() -> FastAPI:
             "http://127.0.0.1:5173",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:8001",
+            "https://*.run.app",
         ],
         allow_credentials=True,
         allow_methods=["*"],
@@ -203,7 +205,22 @@ def create_app() -> FastAPI:
     # Serve React static build if available
     frontend_dist = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"
     if frontend_dist.exists():
-        app.mount("/", StaticFiles(directory=str(frontend_dist), html=True), name="frontend")
+        # Serve static assets (JS, CSS, images) directly
+        assets_dir = frontend_dist / "assets"
+        if assets_dir.exists():
+            app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+        index_html = frontend_dist / "index.html"
+
+        # SPA catch-all: serve index.html for any non-API route
+        @app.get("/{path:path}", include_in_schema=False)
+        async def spa_fallback(path: str):
+            # Serve actual static files if they exist (favicon, etc.)
+            static_file = frontend_dist / path
+            if path and static_file.exists() and static_file.is_file():
+                return FileResponse(str(static_file))
+            # Otherwise return index.html for client-side routing
+            return FileResponse(str(index_html))
 
     return app
 
