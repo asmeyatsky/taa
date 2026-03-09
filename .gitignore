@@ -12,7 +12,7 @@ htmlcov/
 .venv/
 venv/
 env/
-output/
+/output/
 .DS_Store
 .env
 *.db
