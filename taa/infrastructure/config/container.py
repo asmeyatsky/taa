@@ -15,6 +15,7 @@ from taa.infrastructure.persistence.yaml_repository import (
 )
 from taa.infrastructure.database.connection import DatabaseManager
 from taa.infrastructure.database.repositories import (
+    SQLiteOrganizationRepository,
     SQLiteUserRepository,
     SQLiteSchemaRepository,
     SQLiteMappingRepository,
@@ -64,6 +65,7 @@ class Container:
 
         # Database
         self.db = DatabaseManager(url=db_url)
+        self.org_repo = SQLiteOrganizationRepository(self.db)
         self.user_repo = SQLiteUserRepository(self.db)
         self.schema_repo = SQLiteSchemaRepository(self.db)
         self.mapping_repo = SQLiteMappingRepository(self.db)

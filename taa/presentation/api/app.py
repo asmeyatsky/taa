@@ -15,10 +15,12 @@ from fastapi.staticfiles import StaticFiles
 
 from taa import __version__
 from taa.presentation.api.dependencies import get_container
-from taa.presentation.api.routers import auth, bss, domain, bigquery, compliance, analytics, mock
+from taa.presentation.api.routers import auth, bss, domain, bigquery, compliance, analytics, mock, users, audit, organizations
 from taa.presentation.api.middleware.rate_limit import RateLimitMiddleware
 from taa.presentation.api.middleware.metrics import MetricsMiddleware, metrics_endpoint, metrics_state
 from taa.presentation.api.middleware.logging import RequestLoggingMiddleware
+from taa.presentation.api.middleware.audit import AuditMiddleware
+from taa.presentation.api.middleware.tenant import TenantMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,8 @@ _request_counter: dict[str, int] = {"total": 0}
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown.
 
-    On startup: initialise the SQLite database and seed demo users.
+    On startup: initialise the SQLite database, seed the default
+    organization, and seed demo users.
     On shutdown: close the database connection gracefully.
     """
     container = get_container()
@@ -41,6 +44,7 @@ async def lifespan(app: FastAPI):
         await container.db.initialize()
         if container.db.is_available:
             logger.info("Database ready at %s", container.db.db_path)
+            await _seed_default_org(container)
             await _seed_demo_users(container)
         else:
             logger.warning("Database unavailable - using in-memory fallback")
@@ -54,6 +58,23 @@ async def lifespan(app: FastAPI):
         await container.db.close()
     except Exception:
         logger.exception("Error closing database")
+
+
+async def _seed_default_org(container) -> None:
+    """Seed the default 'Demo' organization if it doesn't exist yet."""
+    from taa.presentation.api.auth import DEFAULT_ORG_ID, DEFAULT_ORG_NAME, DEFAULT_ORG_SLUG
+
+    existing = await container.org_repo.get_by_id(DEFAULT_ORG_ID)
+    if existing is None:
+        await container.org_repo.create({
+            "id": DEFAULT_ORG_ID,
+            "name": DEFAULT_ORG_NAME,
+            "slug": DEFAULT_ORG_SLUG,
+            "plan": "enterprise",
+            "max_users": 100,
+            "is_active": True,
+        })
+        logger.info("Seeded default organization: %s", DEFAULT_ORG_NAME)
 
 
 async def _seed_demo_users(container) -> None:
@@ -98,6 +119,13 @@ def create_app() -> FastAPI:
     # Request logging
     app.add_middleware(RequestLoggingMiddleware)
 
+    # Audit logging (write operations)
+    app.add_middleware(AuditMiddleware)
+
+    # Tenant resolution
+    from taa.presentation.api.auth import SECRET_KEY, ALGORITHM
+    app.add_middleware(TenantMiddleware, secret_key=SECRET_KEY, algorithm=ALGORITHM)
+
     # Rate limiting
     rate_limit_enabled = os.getenv("TAA_RATE_LIMIT_ENABLED", "true").lower() != "false"
     app.add_middleware(RateLimitMiddleware, enabled=rate_limit_enabled)
@@ -138,12 +166,15 @@ def create_app() -> FastAPI:
 
     # Mount routers
     app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+    app.include_router(organizations.router, prefix="/api/orgs", tags=["Organizations"])
     app.include_router(bss.router, prefix="/api/bss", tags=["BSS"])
     app.include_router(domain.router, prefix="/api/domain", tags=["Domain"])
     app.include_router(bigquery.router, prefix="/api/bigquery", tags=["BigQuery Export"])
     app.include_router(compliance.router, prefix="/api/compliance", tags=["Compliance"])
     app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
     app.include_router(mock.router, prefix="/api/mock", tags=["Mock Data"])
+    app.include_router(users.router, prefix="/api/users", tags=["Users"])
+    app.include_router(audit.router, prefix="/api/audit", tags=["Audit"])
 
     # Serve React static build if available
     frontend_dist = Path(__file__).parent.parent.parent.parent / "frontend" / "dist"

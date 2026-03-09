@@ -13,6 +13,8 @@ import SchemaUploadPage from './pages/SchemaUploadPage'
 import LineagePage from './pages/LineagePage'
 import CostEstimatorPage from './pages/CostEstimatorPage'
 import UsersPage from './pages/UsersPage'
+import AuditPage from './pages/AuditPage'
+import OrganizationPage from './pages/OrganizationPage'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 60_000 } },
@@ -54,6 +56,12 @@ export default function App() {
               } />
               <Route path="/users" element={
                 <ProtectedRoute permission="users:manage"><UsersPage /></ProtectedRoute>
+              } />
+              <Route path="/audit" element={
+                <ProtectedRoute permission="audit:view"><AuditPage /></ProtectedRoute>
+              } />
+              <Route path="/organizations" element={
+                <ProtectedRoute permission="orgs:view"><OrganizationPage /></ProtectedRoute>
               } />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

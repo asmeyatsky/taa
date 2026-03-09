@@ -11,6 +11,40 @@ from datetime import datetime
 from typing import Any
 
 
+class OrganizationRepository(abc.ABC):
+    """Port for organization (tenant) persistence."""
+
+    @abc.abstractmethod
+    async def get_by_id(self, org_id: str) -> dict[str, Any] | None:
+        """Return organization dict or None."""
+        ...
+
+    @abc.abstractmethod
+    async def get_by_slug(self, slug: str) -> dict[str, Any] | None:
+        """Return organization by slug or None."""
+        ...
+
+    @abc.abstractmethod
+    async def list_all(self) -> list[dict[str, Any]]:
+        """Return all organizations."""
+        ...
+
+    @abc.abstractmethod
+    async def create(self, org: dict[str, Any]) -> dict[str, Any]:
+        """Create a new organization and return it."""
+        ...
+
+    @abc.abstractmethod
+    async def update(self, org_id: str, fields: dict[str, Any]) -> dict[str, Any] | None:
+        """Update organization fields and return the updated record."""
+        ...
+
+    @abc.abstractmethod
+    async def delete(self, org_id: str) -> bool:
+        """Delete an organization. Return True if deleted."""
+        ...
+
+
 class UserRepository(abc.ABC):
     """Port for user persistence."""
 
@@ -35,8 +69,8 @@ class UserRepository(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def list_all(self) -> list[dict[str, Any]]:
-        """Return all users."""
+    async def list_all(self, *, org_id: str | None = None) -> list[dict[str, Any]]:
+        """Return all users, optionally filtered by org_id."""
         ...
 
     @abc.abstractmethod
@@ -59,7 +93,7 @@ class SchemaRepository(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def list_all(self, limit: int = 100) -> list[dict[str, Any]]:
+    async def list_all(self, limit: int = 100, *, org_id: str | None = None) -> list[dict[str, Any]]:
         """List schemas ordered by upload time descending."""
         ...
 
@@ -83,7 +117,7 @@ class MappingRepository(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def list_all(self, limit: int = 100) -> list[dict[str, Any]]:
+    async def list_all(self, limit: int = 100, *, org_id: str | None = None) -> list[dict[str, Any]]:
         """List mappings ordered by creation time descending."""
         ...
 
@@ -118,6 +152,10 @@ class AuditRepository(abc.ABC):
         resource_type: str,
         resource_id: str | None = None,
         details: str | None = None,
+        username: str = "",
+        ip_address: str | None = None,
+        *,
+        org_id: str | None = None,
     ) -> dict[str, Any]:
         """Record an audit event."""
         ...
@@ -129,6 +167,19 @@ class AuditRepository(abc.ABC):
         action: str | None = None,
         since: datetime | None = None,
         limit: int = 100,
+        offset: int = 0,
+        *,
+        org_id: str | None = None,
     ) -> list[dict[str, Any]]:
         """Query audit log with optional filters."""
+        ...
+
+    @abc.abstractmethod
+    async def count(
+        self,
+        user_id: str | None = None,
+        action: str | None = None,
+        since: datetime | None = None,
+    ) -> int:
+        """Count audit log entries matching filters."""
         ...

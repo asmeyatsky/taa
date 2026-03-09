@@ -5,6 +5,7 @@ export interface User {
   name: string
   email: string
   role: Role
+  org_id?: string | null
 }
 
 export type Permission =
@@ -21,6 +22,8 @@ export type Permission =
   | 'users:manage'
   | 'audit:view'
   | 'settings:manage'
+  | 'orgs:view'
+  | 'orgs:manage'
 
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   user: [
@@ -44,6 +47,7 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'mock:generate',
     'audit:view',
     'settings:manage',
+    'orgs:view',
   ],
   management: [
     'domains:view',
@@ -59,6 +63,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     'users:manage',
     'audit:view',
     'settings:manage',
+    'orgs:view',
+    'orgs:manage',
   ],
 }
 
@@ -69,7 +75,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 }
 
 export const DEMO_USERS: User[] = [
-  { id: '1', name: 'Alex Analyst', email: 'alex@telco.com', role: 'user' },
-  { id: '2', name: 'Sarah Admin', email: 'sarah@telco.com', role: 'admin' },
-  { id: '3', name: 'Mike Director', email: 'mike@telco.com', role: 'management' },
+  { id: '1', name: 'Alex Analyst', email: 'alex@telco.com', role: 'user', org_id: 'org-demo' },
+  { id: '2', name: 'Sarah Admin', email: 'sarah@telco.com', role: 'admin', org_id: 'org-demo' },
+  { id: '3', name: 'Mike Director', email: 'mike@telco.com', role: 'management', org_id: 'org-demo' },
 ]

@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: data.user.name,
         email: data.user.email,
         role: data.user.role as Role,
+        org_id: data.user.org_id || null,
       })
       return true
     } catch {
@@ -78,9 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginDemo = useCallback((userId: string) => {
     // Quick demo login mapping
     const demoUsers: Record<string, { user: User; username: string; password: string }> = {
-      '1': { user: { id: '1', name: 'Alex Analyst', email: 'alex@telco.com', role: 'user' }, username: 'alex', password: 'analyst123' },
-      '2': { user: { id: '2', name: 'Sarah Admin', email: 'sarah@telco.com', role: 'admin' }, username: 'sarah', password: 'admin123' },
-      '3': { user: { id: '3', name: 'Mike Director', email: 'mike@telco.com', role: 'management' }, username: 'mike', password: 'director123' },
+      '1': { user: { id: '1', name: 'Alex Analyst', email: 'alex@telco.com', role: 'user', org_id: 'org-demo' }, username: 'alex', password: 'analyst123' },
+      '2': { user: { id: '2', name: 'Sarah Admin', email: 'sarah@telco.com', role: 'admin', org_id: 'org-demo' }, username: 'sarah', password: 'admin123' },
+      '3': { user: { id: '3', name: 'Mike Director', email: 'mike@telco.com', role: 'management', org_id: 'org-demo' }, username: 'mike', password: 'director123' },
     }
     const demo = demoUsers[userId]
     if (demo) {

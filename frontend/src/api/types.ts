@@ -86,3 +86,33 @@ export interface HealthResponse {
   status: string
   version: string
 }
+
+// Audit types
+export interface AuditEntry {
+  id: number
+  user_id: string
+  username: string
+  action: string
+  resource_type: string
+  resource_id: string | null
+  details: string | null
+  ip_address: string | null
+  created_at: string
+}
+
+export interface AuditListResponse {
+  entries: AuditEntry[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
+export interface AuditStats {
+  total_entries: number
+  today_entries: number
+  unique_users: number
+  top_users: { user: string; count: number }[]
+  top_actions: { action: string; count: number }[]
+  entries_per_day: { date: string; count: number }[]
+}

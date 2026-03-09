@@ -31,6 +31,11 @@ SECRET_KEY = os.getenv("TAA_SECRET_KEY", "taa-dev-secret-key-change-in-productio
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TAA_TOKEN_EXPIRE_MINUTES", "480"))
 
+# Default organization for demo users
+DEFAULT_ORG_ID = "org-demo"
+DEFAULT_ORG_NAME = "Demo"
+DEFAULT_ORG_SLUG = "demo"
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=False)
 
@@ -52,6 +57,7 @@ class UserRecord(BaseModel):
     role: str
     hashed_password: str
     disabled: bool = False
+    org_id: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -66,6 +72,7 @@ class UserOut(BaseModel):
     name: str
     email: str
     role: str
+    org_id: str | None = None
 
 
 # ------------------------------------------------------------------
@@ -82,6 +89,7 @@ ROLES: dict[str, list[str]] = {
         "compliance:view", "compliance:run", "compliance:export",
         "analytics:view", "analytics:generate",
         "bss:upload_schema", "mock:generate", "audit:view", "settings:manage",
+        "orgs:view",
     ],
     "management": [
         "domains:view", "generate:run", "generate:download",
@@ -89,6 +97,7 @@ ROLES: dict[str, list[str]] = {
         "analytics:view", "analytics:generate",
         "bss:upload_schema", "mock:generate",
         "users:manage", "audit:view", "settings:manage",
+        "orgs:view", "orgs:manage",
     ],
 }
 
@@ -103,18 +112,21 @@ DEMO_USERS: list[dict[str, Any]] = [
         "email": "alex@telco.com", "role": "user",
         "hashed_password": pwd_context.hash("analyst123"),
         "disabled": False,
+        "org_id": DEFAULT_ORG_ID,
     },
     {
         "id": "2", "username": "sarah", "name": "Sarah Admin",
         "email": "sarah@telco.com", "role": "admin",
         "hashed_password": pwd_context.hash("admin123"),
         "disabled": False,
+        "org_id": DEFAULT_ORG_ID,
     },
     {
         "id": "3", "username": "mike", "name": "Mike Director",
         "email": "mike@telco.com", "role": "management",
         "hashed_password": pwd_context.hash("director123"),
         "disabled": False,
+        "org_id": DEFAULT_ORG_ID,
     },
 ]
 
@@ -167,6 +179,7 @@ def _dict_to_record(d: dict[str, Any]) -> UserRecord:
         role=d.get("role", "user"),
         hashed_password=d["hashed_password"],
         disabled=bool(d.get("disabled", False)),
+        org_id=d.get("org_id"),
     )
 
 

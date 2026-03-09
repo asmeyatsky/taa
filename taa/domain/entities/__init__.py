@@ -8,6 +8,7 @@ from taa.domain.entities.compliance_rule import ComplianceRule
 from taa.domain.entities.pipeline import Pipeline
 from taa.domain.entities.dag import DAG, DAGTask
 from taa.domain.entities.analytics_template import AnalyticsTemplate
+from taa.domain.entities.organization import Organization
 
 __all__ = [
     "Column",
@@ -19,4 +20,5 @@ __all__ = [
     "DAG",
     "DAGTask",
     "AnalyticsTemplate",
+    "Organization",
 ]

@@ -7,7 +7,7 @@ tracks the current schema version for migrations.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 TABLES: dict[str, str] = {
     "schema_version": """
@@ -15,6 +15,17 @@ TABLES: dict[str, str] = {
             id          INTEGER PRIMARY KEY CHECK (id = 1),
             version     INTEGER NOT NULL DEFAULT 1,
             applied_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+        )
+    """,
+    "organizations": """
+        CREATE TABLE IF NOT EXISTS organizations (
+            id          TEXT PRIMARY KEY,
+            name        TEXT NOT NULL,
+            slug        TEXT NOT NULL UNIQUE,
+            plan        TEXT NOT NULL DEFAULT 'free',
+            max_users   INTEGER NOT NULL DEFAULT 5,
+            is_active   INTEGER NOT NULL DEFAULT 1,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
         )
     """,
     "users": """
@@ -26,14 +37,17 @@ TABLES: dict[str, str] = {
             role            TEXT NOT NULL DEFAULT 'user',
             hashed_password TEXT NOT NULL,
             disabled        INTEGER NOT NULL DEFAULT 0,
+            org_id          TEXT,
             created_at      TEXT NOT NULL DEFAULT (datetime('now')),
-            updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
+            updated_at      TEXT NOT NULL DEFAULT (datetime('now')),
+            FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE SET NULL
         )
     """,
     "schemas": """
         CREATE TABLE IF NOT EXISTS schemas (
             id               TEXT PRIMARY KEY,
             user_id          TEXT,
+            org_id           TEXT,
             content          TEXT NOT NULL,
             format           TEXT NOT NULL DEFAULT 'auto',
             tables_found     INTEGER NOT NULL DEFAULT 0,
@@ -41,13 +55,15 @@ TABLES: dict[str, str] = {
             detected_vendor  TEXT,
             vendor_confidence REAL NOT NULL DEFAULT 0.0,
             uploaded_at      TEXT NOT NULL DEFAULT (datetime('now')),
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+            FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE SET NULL
         )
     """,
     "mappings": """
         CREATE TABLE IF NOT EXISTS mappings (
             id               TEXT PRIMARY KEY,
             schema_id        TEXT,
+            org_id           TEXT,
             vendor_table     TEXT NOT NULL,
             vendor_field     TEXT NOT NULL,
             canonical_table  TEXT NOT NULL,
@@ -55,13 +71,15 @@ TABLES: dict[str, str] = {
             confidence       REAL NOT NULL DEFAULT 0.0,
             match_reason     TEXT NOT NULL DEFAULT '',
             created_at       TEXT NOT NULL DEFAULT (datetime('now')),
-            FOREIGN KEY (schema_id) REFERENCES schemas(id) ON DELETE CASCADE
+            FOREIGN KEY (schema_id) REFERENCES schemas(id) ON DELETE CASCADE,
+            FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE SET NULL
         )
     """,
     "exports": """
         CREATE TABLE IF NOT EXISTS exports (
             id              TEXT PRIMARY KEY,
             user_id         TEXT,
+            org_id          TEXT,
             domains         TEXT NOT NULL DEFAULT '[]',
             jurisdiction    TEXT NOT NULL DEFAULT 'SA',
             file_count      INTEGER NOT NULL DEFAULT 0,
@@ -69,30 +87,40 @@ TABLES: dict[str, str] = {
             status          TEXT NOT NULL DEFAULT 'completed',
             created_at      TEXT NOT NULL DEFAULT (datetime('now')),
             expires_at      TEXT,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+            FOREIGN KEY (org_id) REFERENCES organizations(id) ON DELETE SET NULL
         )
     """,
     "audit_log": """
         CREATE TABLE IF NOT EXISTS audit_log (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id         TEXT,
+            username        TEXT NOT NULL DEFAULT '',
+            org_id          TEXT,
             action          TEXT NOT NULL,
             resource_type   TEXT NOT NULL DEFAULT '',
             resource_id     TEXT,
             details         TEXT,
+            ip_address      TEXT,
             created_at      TEXT NOT NULL DEFAULT (datetime('now'))
         )
     """,
 }
 
 INDEXES: list[str] = [
+    "CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug)",
     "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)",
+    "CREATE INDEX IF NOT EXISTS idx_users_org ON users(org_id)",
     "CREATE INDEX IF NOT EXISTS idx_schemas_user ON schemas(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_schemas_org ON schemas(org_id)",
     "CREATE INDEX IF NOT EXISTS idx_schemas_uploaded ON schemas(uploaded_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_mappings_schema ON mappings(schema_id)",
+    "CREATE INDEX IF NOT EXISTS idx_mappings_org ON mappings(org_id)",
     "CREATE INDEX IF NOT EXISTS idx_exports_user ON exports(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_exports_org ON exports(org_id)",
     "CREATE INDEX IF NOT EXISTS idx_exports_created ON exports(created_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_audit_org ON audit_log(org_id)",
     "CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action)",
     "CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at DESC)",
 ]

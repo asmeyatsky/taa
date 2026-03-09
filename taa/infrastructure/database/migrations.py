@@ -37,24 +37,63 @@ async def _set_version(conn: aiosqlite.Connection, version: int) -> None:
 
 
 # ------------------------------------------------------------------
+# Migration functions
+# ------------------------------------------------------------------
+
+async def _migrate_v2(conn: aiosqlite.Connection) -> None:
+    """Add multi-tenant support: organizations table and org_id columns."""
+    # Create organizations table
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS organizations (
+            id          TEXT PRIMARY KEY,
+            name        TEXT NOT NULL,
+            slug        TEXT NOT NULL UNIQUE,
+            plan        TEXT NOT NULL DEFAULT 'free',
+            max_users   INTEGER NOT NULL DEFAULT 5,
+            is_active   INTEGER NOT NULL DEFAULT 1,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    """)
+
+    # Add org_id to existing tables (SQLite requires ALTER TABLE for each column)
+    # These use try/except because the column may already exist on a fresh DB
+    for table in ("users", "schemas", "mappings", "exports", "audit_log"):
+        try:
+            await conn.execute(
+                f"ALTER TABLE {table} ADD COLUMN org_id TEXT REFERENCES organizations(id) ON DELETE SET NULL"
+            )
+        except Exception:
+            # Column already exists (e.g. fresh database created with v2 schema)
+            pass
+
+    # Create indexes for org_id columns
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_organizations_slug ON organizations(slug)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_users_org ON users(org_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_schemas_org ON schemas(org_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mappings_org ON mappings(org_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_exports_org ON exports(org_id)"
+    )
+    await conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_audit_org ON audit_log(org_id)"
+    )
+
+
+# ------------------------------------------------------------------
 # Migration registry
-#
-# Each entry maps a target version to an async callable that receives
-# the aiosqlite connection.  The callable must NOT commit -- the runner
-# handles commits.  Add new migrations by appending to this dict.
 # ------------------------------------------------------------------
 
 MIGRATIONS: dict[int, callable] = {
-    # Example for future use:
-    # 2: _migrate_v2,
+    2: _migrate_v2,
 }
-
-
-async def _migrate_v2_example(conn: aiosqlite.Connection) -> None:  # pragma: no cover
-    """Example migration: add a ``metadata`` column to schemas."""
-    await conn.execute(
-        "ALTER TABLE schemas ADD COLUMN metadata TEXT DEFAULT '{}'"
-    )
 
 
 async def apply_migrations(conn: aiosqlite.Connection) -> None:

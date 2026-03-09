@@ -21,6 +21,8 @@ const navItems: NavItem[] = [
   { to: '/costs', label: 'Costs', icon: '\u2261' },
   { to: '/schema', label: 'Schema Import', icon: '\u21C5', permission: 'bss:upload_schema' },
   { to: '/users', label: 'Users', icon: '\u2699', permission: 'users:manage' },
+  { to: '/audit', label: 'Audit Log', icon: '\u2611', permission: 'audit:view' },
+  { to: '/organizations', label: 'Organizations', icon: '\u2616', permission: 'orgs:view' },
 ]
 
 export default function Layout() {

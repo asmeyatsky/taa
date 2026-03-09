@@ -30,12 +30,17 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> TokenRe
             detail="Invalid username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = create_access_token(data={"sub": user.username, "role": user.role})
+    token = create_access_token(data={
+        "sub": user.username,
+        "role": user.role,
+        "org_id": user.org_id,
+    })
     return TokenResponse(
         access_token=token,
         user=UserOut(
             id=user.id, username=user.username,
             name=user.name, email=user.email, role=user.role,
+            org_id=user.org_id,
         ),
     )
 
@@ -46,6 +51,7 @@ def get_me(user: Annotated[UserRecord, Depends(get_current_user)]) -> UserOut:
     return UserOut(
         id=user.id, username=user.username,
         name=user.name, email=user.email, role=user.role,
+        org_id=user.org_id,
     )
 
 

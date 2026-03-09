@@ -142,3 +142,35 @@ class AIMappingResponse(BaseModel):
     model_used: str
     message: str
     available: bool
+
+
+# --- Users ---
+
+class UserCreateRequest(BaseModel):
+    username: str
+    name: str = ""
+    email: str = ""
+    role: str = "user"
+    password: str
+
+
+class UserUpdateRequest(BaseModel):
+    name: str | None = None
+    email: str | None = None
+    role: str | None = None
+    password: str | None = None
+
+
+class UserResponse(BaseModel):
+    id: str
+    username: str
+    name: str
+    email: str
+    role: str
+    disabled: bool = False
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class PasswordResetRequest(BaseModel):
+    new_password: str
