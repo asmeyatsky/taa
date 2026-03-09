@@ -9,7 +9,7 @@ import resource
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -44,8 +44,12 @@ async def lifespan(app: FastAPI):
         await container.db.initialize()
         if container.db.is_available:
             logger.info("Database ready at %s", container.db.db_path)
-            await _seed_default_org(container)
-            await _seed_demo_users(container)
+            from taa.presentation.api.auth import DEMO_USERS_ENABLED
+            if DEMO_USERS_ENABLED:
+                await _seed_default_org(container)
+                await _seed_demo_users(container)
+            else:
+                logger.info("Demo user seeding skipped (production mode)")
         else:
             logger.warning("Database unavailable - using in-memory fallback")
     except Exception:
@@ -135,34 +139,54 @@ def create_app() -> FastAPI:
 
     # --- Routes ---
 
-    # Prometheus metrics endpoint
-    app.add_api_route("/metrics", metrics_endpoint, methods=["GET"], tags=["Monitoring"])
+    # Prometheus metrics endpoint (auth-protected)
+    from taa.presentation.api.auth import get_current_user
+    from typing import Annotated
+    from taa.presentation.api.auth import UserRecord
 
-    # Enhanced health check
+    @app.get("/metrics", tags=["Monitoring"])
+    async def protected_metrics(
+        user: Annotated[UserRecord, Depends(get_current_user)],
+    ):
+        from taa.presentation.api.auth import ROLES
+        if "settings:manage" not in ROLES.get(user.role, []):
+            from fastapi import HTTPException
+            raise HTTPException(status_code=403, detail="Admin access required")
+        return await metrics_endpoint(None)
+
+    # Health check: public liveness probe returns minimal info, detailed info requires auth
     @app.get("/api/health", tags=["Monitoring"])
-    def health() -> dict:
+    def health(request: Request) -> dict:
         _request_counter["total"] += 1
-        container = get_container()
+        result: dict = {"status": "ok", "version": __version__}
 
-        # Memory usage (RSS in MB)
-        try:
-            rusage = resource.getrusage(resource.RUSAGE_SELF)
-            memory_mb = round(rusage.ru_maxrss / (1024 * 1024), 2)
-            if memory_mb < 1:
-                memory_mb = round(rusage.ru_maxrss / 1024, 2)
-        except Exception:
-            memory_mb = None
+        # Only expose detailed info to authenticated admin users
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            try:
+                from taa.presentation.api.auth import SECRET_KEY, ALGORITHM, ROLES
+                from jose import jwt
+                payload = jwt.decode(auth_header[7:], SECRET_KEY, algorithms=[ALGORITHM])
+                role = payload.get("role", "")
+                if "settings:manage" in ROLES.get(role, []):
+                    container = get_container()
+                    try:
+                        rusage = resource.getrusage(resource.RUSAGE_SELF)
+                        memory_mb = round(rusage.ru_maxrss / (1024 * 1024), 2)
+                        if memory_mb < 1:
+                            memory_mb = round(rusage.ru_maxrss / 1024, 2)
+                    except Exception:
+                        memory_mb = None
+                    result.update({
+                        "database": "connected" if container.db.is_available else "unavailable",
+                        "uptime_seconds": round(time.time() - _start_time, 1),
+                        "requests_served": _request_counter["total"],
+                        "memory_mb": memory_mb,
+                    })
+            except Exception:
+                pass
 
-        uptime_seconds = round(time.time() - _start_time, 1)
-
-        return {
-            "status": "ok",
-            "version": __version__,
-            "database": "connected" if container.db.is_available else "unavailable",
-            "uptime_seconds": uptime_seconds,
-            "requests_served": _request_counter["total"],
-            "memory_mb": memory_mb,
-        }
+        return result
 
     # Mount routers
     app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])

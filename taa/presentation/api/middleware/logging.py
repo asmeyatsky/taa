@@ -37,6 +37,19 @@ def _configure_logger() -> logging.Logger:
 
 _logger = _configure_logger()
 
+# PII controls: set TAA_LOG_REDACT_PII=true to mask IPs and usernames in logs
+_REDACT_PII = os.getenv("TAA_LOG_REDACT_PII", "false").lower() == "true"
+
+
+def _redact_ip(ip: str | None) -> str | None:
+    """Mask the last octet of an IP address for privacy compliance."""
+    if ip is None or not _REDACT_PII:
+        return ip
+    parts = ip.split(".")
+    if len(parts) == 4:
+        return f"{parts[0]}.{parts[1]}.{parts[2]}.***"
+    return "***"
+
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Middleware that logs structured JSON for every HTTP request."""
@@ -59,6 +72,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             client_ip = forwarded.split(",")[0].strip()
         elif request.client:
             client_ip = request.client.host
+        client_ip = _redact_ip(client_ip)
 
         # Process request
         try:

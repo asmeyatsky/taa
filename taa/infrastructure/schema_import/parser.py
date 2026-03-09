@@ -25,11 +25,20 @@ class ImportedTable:
     columns: tuple[ImportedColumn, ...] = ()
 
 
+# Maximum input size to prevent ReDoS and memory exhaustion (1 MB)
+_MAX_SCHEMA_SIZE = 1024 * 1024
+
+
 class SchemaParser:
     """Parses DDL (CREATE TABLE) statements or CSV schema exports."""
 
     def parse(self, content: str, fmt: str = "auto") -> tuple[ImportedTable, ...]:
         """Parse schema content. fmt can be 'ddl', 'csv', or 'auto'."""
+        if len(content) > _MAX_SCHEMA_SIZE:
+            raise ValueError(
+                f"Schema content too large ({len(content)} bytes). "
+                f"Maximum allowed: {_MAX_SCHEMA_SIZE} bytes."
+            )
         if fmt == "auto":
             fmt = self._detect_format(content)
         if fmt == "ddl":
@@ -60,9 +69,10 @@ class SchemaParser:
     def _parse_ddl(self, content: str) -> tuple[ImportedTable, ...]:
         tables: list[ImportedTable] = []
         # Match CREATE TABLE statements
+        # Uses atomic-like pattern: [\w.]+ instead of nested \w+(?:\.\w+)* to avoid ReDoS
         pattern = re.compile(
             r"CREATE\s+(?:OR\s+REPLACE\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?"
-            r"[`\"\[]?(\w+(?:\.\w+)*)[`\"\]]?\s*\((.*?)\)\s*;",
+            r"[`\"\[]?([\w.]+)[`\"\]]?\s*\((.*?)\)\s*;",
             re.IGNORECASE | re.DOTALL,
         )
         for match in pattern.finditer(content):

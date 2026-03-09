@@ -103,12 +103,12 @@ config:
   TAA_TOKEN_EXPIRE_MINUTES: "480"
 
 # Application secrets
-# In production, use external secret management (e.g., External Secrets Operator)
-secrets:
-  TAA_SECRET_KEY: "CHANGE-ME-generate-a-secure-random-key"
-  TAA_DATABASE_URL: "sqlite:///./taa.db"
-  # Optional: Uncomment to enable LLM features
-  # ANTHROPIC_API_KEY: "sk-ant-..."
+# In production, use external secret management (e.g., External Secrets Operator, Vault)
+# DO NOT commit real values here
+secrets: {}
+  # TAA_SECRET_KEY: ""  # REQUIRED - generate with: python -c "import secrets; print(secrets.token_urlsafe(64))"
+  # TAA_DATABASE_URL: ""
+  # ANTHROPIC_API_KEY: ""
 
 # Probe configuration
 probes:

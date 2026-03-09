@@ -8,6 +8,7 @@ health checks, and metrics endpoints are silently skipped.
 from __future__ import annotations
 
 import logging
+import os
 import re
 from typing import Any
 
@@ -54,14 +55,24 @@ _PATH_RESOURCE_MAP: list[tuple[str, str, str]] = [
 ]
 
 
+_REDACT_PII = os.getenv("TAA_LOG_REDACT_PII", "false").lower() == "true"
+
+
 def _extract_client_ip(request: Request) -> str:
-    """Extract the client IP from the request."""
+    """Extract the client IP from the request, optionally redacted."""
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
-        return forwarded.split(",")[0].strip()
-    if request.client:
-        return request.client.host
-    return "unknown"
+        ip = forwarded.split(",")[0].strip()
+    elif request.client:
+        ip = request.client.host
+    else:
+        ip = "unknown"
+    if _REDACT_PII and ip != "unknown":
+        parts = ip.split(".")
+        if len(parts) == 4:
+            return f"{parts[0]}.{parts[1]}.{parts[2]}.***"
+        return "***"
+    return ip
 
 
 def _classify_request(method: str, path: str) -> tuple[str, str, str | None]:

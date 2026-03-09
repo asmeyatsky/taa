@@ -26,10 +26,24 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
-# Config -- in production these come from env vars
-SECRET_KEY = os.getenv("TAA_SECRET_KEY", "taa-dev-secret-key-change-in-production")
+# Config
+_ENV = os.getenv("TAA_ENV", "development")
+_IS_PRODUCTION = _ENV.lower() in ("production", "prod")
+
+SECRET_KEY = os.getenv("TAA_SECRET_KEY", "")
+if not SECRET_KEY:
+    if _IS_PRODUCTION:
+        raise RuntimeError(
+            "TAA_SECRET_KEY must be set in production. "
+            "Generate one with: python -c \"import secrets; print(secrets.token_urlsafe(64))\""
+        )
+    # Auto-generate an ephemeral key for development (changes each restart)
+    import secrets as _secrets
+    SECRET_KEY = _secrets.token_urlsafe(64)
+    logger.warning("TAA_SECRET_KEY not set — using auto-generated ephemeral key (dev only)")
+
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TAA_TOKEN_EXPIRE_MINUTES", "480"))
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TAA_TOKEN_EXPIRE_MINUTES", "30" if _IS_PRODUCTION else "480"))
 
 # Default organization for demo users
 DEFAULT_ORG_ID = "org-demo"
@@ -130,10 +144,13 @@ DEMO_USERS: list[dict[str, Any]] = [
     },
 ]
 
-# In-memory fallback store, built from DEMO_USERS
+# In-memory fallback store (disabled in production)
+DEMO_USERS_ENABLED = not _IS_PRODUCTION and os.getenv("TAA_DISABLE_DEMO_USERS", "").lower() != "true"
 USERS_DB: dict[str, UserRecord] = {
     u["username"]: UserRecord(**u) for u in DEMO_USERS
-}
+} if DEMO_USERS_ENABLED else {}
+if _IS_PRODUCTION:
+    logger.info("Demo users disabled in production mode")
 
 
 # ------------------------------------------------------------------

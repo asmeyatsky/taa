@@ -604,16 +604,16 @@ class TestTenantResolution:
 
         return app
 
-    def test_header_tenant_resolution(self):
-        """X-Tenant-ID header should set tenant context."""
+    def test_header_only_tenant_rejected(self):
+        """X-Tenant-ID header without auth should be rejected to prevent spoofing."""
         from starlette.testclient import TestClient
 
         app = self._make_app()
         client = TestClient(app)
 
         response = client.get("/test", headers={"X-Tenant-ID": "org-123"})
-        assert response.status_code == 200, f"Response body: {response.text}"
-        assert response.json()["tenant_id"] == "org-123"
+        assert response.status_code == 403
+        assert "requires authenticated request" in response.json()["detail"]
 
     def test_no_tenant_header(self):
         """Without X-Tenant-ID header, tenant should be None."""

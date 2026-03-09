@@ -4,12 +4,14 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - TAA_SECRET_KEY=${TAA_SECRET_KEY:-taa-dev-secret-key-change-in-production}
-      - TAA_TOKEN_EXPIRE_MINUTES=${TAA_TOKEN_EXPIRE_MINUTES:-480}
+      - TAA_ENV=${TAA_ENV:-development}
+      - TAA_SECRET_KEY=${TAA_SECRET_KEY:?Set TAA_SECRET_KEY or export it before running}
+      - TAA_TOKEN_EXPIRE_MINUTES=${TAA_TOKEN_EXPIRE_MINUTES:-30}
       - TAA_DATABASE_URL=${TAA_DATABASE_URL:-sqlite:///./taa.db}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - TAA_LOG_LEVEL=${TAA_LOG_LEVEL:-INFO}
       - TAA_RATE_LIMIT_ENABLED=${TAA_RATE_LIMIT_ENABLED:-true}
+      - TAA_LOG_REDACT_PII=${TAA_LOG_REDACT_PII:-false}
     volumes:
       - taa-data:/app/data
     healthcheck:

@@ -70,8 +70,9 @@ class TenantMiddleware(BaseHTTPMiddleware):
             except JWTError:
                 pass  # Token validation is handled by the auth layer
 
-        # Resolve tenant: header takes precedence, but must match JWT if both present
+        # Resolve tenant: JWT org_id is authoritative
         if header_tenant and jwt_org_id:
+            # Header must match the JWT claim — no cross-tenant access
             if header_tenant != jwt_org_id:
                 return JSONResponse(
                     status_code=403,
@@ -79,9 +80,16 @@ class TenantMiddleware(BaseHTTPMiddleware):
                         "detail": "Tenant mismatch: X-Tenant-ID header does not match token org_id"
                     },
                 )
-            tenant_id = header_tenant
-        elif header_tenant:
-            tenant_id = header_tenant
+            tenant_id = jwt_org_id
+        elif header_tenant and not jwt_org_id:
+            # Reject header-only tenant claims from unauthenticated requests
+            # to prevent tenant spoofing
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "detail": "X-Tenant-ID header requires authenticated request"
+                },
+            )
         elif jwt_org_id:
             tenant_id = jwt_org_id
 
