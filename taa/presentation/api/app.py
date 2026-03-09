@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from taa import __version__
-from taa.presentation.api.routers import bss, domain, bigquery, compliance, analytics, mock
+from taa.presentation.api.routers import auth, bss, domain, bigquery, compliance, analytics, mock
 
 
 def create_app() -> FastAPI:
@@ -42,6 +42,7 @@ def create_app() -> FastAPI:
         return {"status": "ok", "version": __version__}
 
     # Mount routers
+    app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
     app.include_router(bss.router, prefix="/api/bss", tags=["BSS"])
     app.include_router(domain.router, prefix="/api/domain", tags=["Domain"])
     app.include_router(bigquery.router, prefix="/api/bigquery", tags=["BigQuery Export"])

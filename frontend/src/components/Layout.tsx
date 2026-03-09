@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { ROLE_LABELS, type Permission } from '../auth/types'
+import GuidedTour from './GuidedTour'
 
 interface NavItem {
   to: string
@@ -13,14 +15,18 @@ const navItems: NavItem[] = [
   { to: '/', label: 'Home', icon: '\u2302' },
   { to: '/generate', label: 'Generate', icon: '\u26A1' },
   { to: '/domains', label: 'Domains', icon: '\u2637' },
+  { to: '/lineage', label: 'Lineage', icon: '\u2B95' },
   { to: '/compliance', label: 'Compliance', icon: '\u2616' },
   { to: '/analytics', label: 'Analytics', icon: '\u2197' },
+  { to: '/costs', label: 'Costs', icon: '\u2261' },
+  { to: '/schema', label: 'Schema Import', icon: '\u21C5', permission: 'bss:upload_schema' },
   { to: '/users', label: 'Users', icon: '\u2699', permission: 'users:manage' },
 ]
 
 export default function Layout() {
   const { user, logout, hasPermission } = useAuth()
   const navigate = useNavigate()
+  const [tourActive, setTourActive] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -40,6 +46,12 @@ export default function Layout() {
         </NavLink>
         {user && (
           <div className="header-user">
+            <button
+              className="tour-trigger"
+              onClick={() => setTourActive(true)}
+            >
+              Take a Tour
+            </button>
             <span className={`role-badge role-${user.role}`}>
               {ROLE_LABELS[user.role]}
             </span>
@@ -68,6 +80,7 @@ export default function Layout() {
           <Outlet />
         </main>
       </div>
+      <GuidedTour active={tourActive} onEnd={() => setTourActive(false)} />
     </div>
   )
 }

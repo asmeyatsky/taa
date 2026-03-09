@@ -9,6 +9,9 @@ import GeneratePage from './pages/GeneratePage'
 import DomainsPage from './pages/DomainsPage'
 import CompliancePage from './pages/CompliancePage'
 import AnalyticsPage from './pages/AnalyticsPage'
+import SchemaUploadPage from './pages/SchemaUploadPage'
+import LineagePage from './pages/LineagePage'
+import CostEstimatorPage from './pages/CostEstimatorPage'
 import UsersPage from './pages/UsersPage'
 
 const queryClient = new QueryClient({
@@ -29,29 +32,28 @@ export default function App() {
             }>
               <Route path="/" element={<HomePage />} />
               <Route path="/generate" element={
-                <ProtectedRoute permission="generate:run">
-                  <GeneratePage />
-                </ProtectedRoute>
+                <ProtectedRoute permission="generate:run"><GeneratePage /></ProtectedRoute>
               } />
               <Route path="/domains" element={
-                <ProtectedRoute permission="domains:view">
-                  <DomainsPage />
-                </ProtectedRoute>
+                <ProtectedRoute permission="domains:view"><DomainsPage /></ProtectedRoute>
               } />
               <Route path="/compliance" element={
-                <ProtectedRoute permission="compliance:view">
-                  <CompliancePage />
-                </ProtectedRoute>
+                <ProtectedRoute permission="compliance:view"><CompliancePage /></ProtectedRoute>
               } />
               <Route path="/analytics" element={
-                <ProtectedRoute permission="analytics:view">
-                  <AnalyticsPage />
-                </ProtectedRoute>
+                <ProtectedRoute permission="analytics:view"><AnalyticsPage /></ProtectedRoute>
+              } />
+              <Route path="/schema" element={
+                <ProtectedRoute permission="bss:upload_schema"><SchemaUploadPage /></ProtectedRoute>
+              } />
+              <Route path="/lineage" element={
+                <ProtectedRoute permission="domains:view"><LineagePage /></ProtectedRoute>
+              } />
+              <Route path="/costs" element={
+                <ProtectedRoute permission="generate:run"><CostEstimatorPage /></ProtectedRoute>
               } />
               <Route path="/users" element={
-                <ProtectedRoute permission="users:manage">
-                  <UsersPage />
-                </ProtectedRoute>
+                <ProtectedRoute permission="users:manage"><UsersPage /></ProtectedRoute>
               } />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />

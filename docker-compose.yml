@@ -1,0 +1,15 @@
+services:
+  taa:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - TAA_SECRET_KEY=${TAA_SECRET_KEY:-taa-dev-secret-key-change-in-production}
+      - TAA_TOKEN_EXPIRE_MINUTES=${TAA_TOKEN_EXPIRE_MINUTES:-480}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped

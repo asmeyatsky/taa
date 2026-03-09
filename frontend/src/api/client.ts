@@ -12,8 +12,15 @@ import type {
 
 const BASE = '/api'
 
+function getAuthHeaders(): Record<string, string> {
+  const token = localStorage.getItem('taa_token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`)
+  const res = await fetch(`${BASE}${path}`, {
+    headers: getAuthHeaders(),
+  })
   if (!res.ok) throw new Error(`GET ${path} failed: ${res.status}`)
   return res.json()
 }
@@ -21,7 +28,7 @@ async function get<T>(path: string): Promise<T> {
 async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(body),
   })
   if (!res.ok) throw new Error(`POST ${path} failed: ${res.status}`)
@@ -53,6 +60,7 @@ export const api = {
   generateTemplate: (name: string, templateType: string) =>
     fetch(`${BASE}/analytics/generate?name=${encodeURIComponent(name)}&template_type=${encodeURIComponent(templateType)}`, {
       method: 'POST',
+      headers: getAuthHeaders(),
     }).then(r => {
       if (!r.ok) throw new Error(`Generate template failed: ${r.status}`)
       return r.json() as Promise<{ name: string; type: string; content: string }>
@@ -62,7 +70,7 @@ export const api = {
   generateMockData: (domains: string[], rows: number, format: string) =>
     fetch(`${BASE}/mock/generate`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({ domains, rows, format }),
     }),
 }
