@@ -1,10 +1,22 @@
-"""JWT authentication for TAA API."""
+"""JWT authentication for TAA API.
+
+Supports two modes:
+- **Database mode**: when the SQLite database is available, users are
+  loaded from / persisted to the ``users`` table.
+- **In-memory fallback**: when the database is unavailable, a static
+  ``USERS_DB`` dict is used (identical to the original behaviour).
+
+Demo users are defined in ``DEMO_USERS`` and seeded into the database
+on first application startup (see ``app.py``).
+"""
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -12,7 +24,9 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 
-# Config — in production these come from env vars
+logger = logging.getLogger(__name__)
+
+# Config -- in production these come from env vars
 SECRET_KEY = os.getenv("TAA_SECRET_KEY", "taa-dev-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TAA_TOKEN_EXPIRE_MINUTES", "480"))
@@ -20,6 +34,10 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TAA_TOKEN_EXPIRE_MINUTES", "480"))
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=False)
 
+
+# ------------------------------------------------------------------
+# Pydantic models
+# ------------------------------------------------------------------
 
 class Role(BaseModel):
     name: str
@@ -50,7 +68,10 @@ class UserOut(BaseModel):
     role: str
 
 
+# ------------------------------------------------------------------
 # Role definitions
+# ------------------------------------------------------------------
+
 ROLES: dict[str, list[str]] = {
     "user": [
         "domains:view", "generate:run", "generate:download",
@@ -71,32 +92,107 @@ ROLES: dict[str, list[str]] = {
     ],
 }
 
-# Demo user store — in production this would be a database
+
+# ------------------------------------------------------------------
+# Demo users (seed data)
+# ------------------------------------------------------------------
+
+DEMO_USERS: list[dict[str, Any]] = [
+    {
+        "id": "1", "username": "alex", "name": "Alex Analyst",
+        "email": "alex@telco.com", "role": "user",
+        "hashed_password": pwd_context.hash("analyst123"),
+        "disabled": False,
+    },
+    {
+        "id": "2", "username": "sarah", "name": "Sarah Admin",
+        "email": "sarah@telco.com", "role": "admin",
+        "hashed_password": pwd_context.hash("admin123"),
+        "disabled": False,
+    },
+    {
+        "id": "3", "username": "mike", "name": "Mike Director",
+        "email": "mike@telco.com", "role": "management",
+        "hashed_password": pwd_context.hash("director123"),
+        "disabled": False,
+    },
+]
+
+# In-memory fallback store, built from DEMO_USERS
 USERS_DB: dict[str, UserRecord] = {
-    "alex": UserRecord(
-        id="1", username="alex", name="Alex Analyst",
-        email="alex@telco.com", role="user",
-        hashed_password=pwd_context.hash("analyst123"),
-    ),
-    "sarah": UserRecord(
-        id="2", username="sarah", name="Sarah Admin",
-        email="sarah@telco.com", role="admin",
-        hashed_password=pwd_context.hash("admin123"),
-    ),
-    "mike": UserRecord(
-        id="3", username="mike", name="Mike Director",
-        email="mike@telco.com", role="management",
-        hashed_password=pwd_context.hash("director123"),
-    ),
+    u["username"]: UserRecord(**u) for u in DEMO_USERS
 }
 
+
+# ------------------------------------------------------------------
+# Helpers to bridge sync FastAPI endpoints with async DB repository
+# ------------------------------------------------------------------
+
+def _get_user_repo():
+    """Return the user repository from the DI container, or None if unavailable."""
+    from taa.presentation.api.dependencies import get_container
+    container = get_container()
+    if container.db.is_available:
+        return container.user_repo
+    return None
+
+
+def _run_async(coro):
+    """Run an async coroutine from synchronous code.
+
+    Works whether or not there is a running event loop.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop is not None and loop.is_running():
+        # We are inside an async context (e.g. FastAPI with async event loop).
+        # Create a new thread to run the coroutine without blocking.
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            return pool.submit(asyncio.run, coro).result()
+    else:
+        return asyncio.run(coro)
+
+
+def _dict_to_record(d: dict[str, Any]) -> UserRecord:
+    """Convert a database row dict to a UserRecord."""
+    return UserRecord(
+        id=str(d["id"]),
+        username=d["username"],
+        name=d.get("name", ""),
+        email=d.get("email", ""),
+        role=d.get("role", "user"),
+        hashed_password=d["hashed_password"],
+        disabled=bool(d.get("disabled", False)),
+    )
+
+
+# ------------------------------------------------------------------
+# Core auth functions
+# ------------------------------------------------------------------
 
 def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
+def _lookup_user(username: str) -> UserRecord | None:
+    """Look up a user by username, trying DB first then in-memory fallback."""
+    repo = _get_user_repo()
+    if repo is not None:
+        try:
+            row = _run_async(repo.get_by_username(username))
+            if row is not None:
+                return _dict_to_record(row)
+        except Exception:
+            logger.debug("DB lookup failed, falling back to in-memory", exc_info=True)
+    return USERS_DB.get(username)
+
+
 def authenticate_user(username: str, password: str) -> UserRecord | None:
-    user = USERS_DB.get(username)
+    user = _lookup_user(username)
     if not user or user.disabled:
         return None
     if not verify_password(password, user.hashed_password):
@@ -120,7 +216,7 @@ def get_current_user_optional(token: Annotated[str | None, Depends(oauth2_scheme
         username: str | None = payload.get("sub")
         if username is None:
             return None
-        user = USERS_DB.get(username)
+        user = _lookup_user(username)
         if user is None or user.disabled:
             return None
         return user

@@ -123,3 +123,22 @@ class MockDataRequest(BaseModel):
 class AnalyticsTemplateInfo(BaseModel):
     name: str
     type: str = "sql"
+
+
+# --- AI Mapping ---
+
+class AIMappingSuggestionItem(BaseModel):
+    vendor_table: str
+    vendor_field: str
+    canonical_table: str
+    canonical_field: str
+    confidence: float
+    reasoning: str
+    transformation: str = ""
+
+
+class AIMappingResponse(BaseModel):
+    suggestions: list[AIMappingSuggestionItem]
+    model_used: str
+    message: str
+    available: bool

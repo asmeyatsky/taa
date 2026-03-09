@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taa
+  namespace: taa
+  labels:
+    app.kubernetes.io/name: taa
+    app.kubernetes.io/component: server
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - taa.example.com
+      secretName: taa-tls
+  rules:
+    - host: taa.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: taa
+                port:
+                  name: http

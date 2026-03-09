@@ -13,6 +13,14 @@ from taa.infrastructure.persistence.yaml_repository import (
     YAMLDomainModelRepository,
     YAMLComplianceRuleRepository,
 )
+from taa.infrastructure.database.connection import DatabaseManager
+from taa.infrastructure.database.repositories import (
+    SQLiteUserRepository,
+    SQLiteSchemaRepository,
+    SQLiteMappingRepository,
+    SQLiteExportRepository,
+    SQLiteAuditRepository,
+)
 from taa.infrastructure.generators.bigquery_ddl import BigQueryDDLGenerator
 from taa.infrastructure.generators.terraform import TerraformGenerator
 from taa.infrastructure.generators.dataflow import DataflowPipelineGenerator
@@ -37,7 +45,7 @@ from taa.application.queries.handlers import (
 class Container:
     """DI composition root - wires all dependencies together."""
 
-    def __init__(self, project_id: str = "telco-analytics") -> None:
+    def __init__(self, project_id: str = "telco-analytics", db_url: str | None = None) -> None:
         self._project_id = project_id
 
         # Domain services
@@ -53,6 +61,14 @@ class Container:
         self.domain_repo = YAMLDomainModelRepository()
         self.compliance_rule_repo = YAMLComplianceRuleRepository()
         self.vendor_repo = VendorSchemaReader()
+
+        # Database
+        self.db = DatabaseManager(url=db_url)
+        self.user_repo = SQLiteUserRepository(self.db)
+        self.schema_repo = SQLiteSchemaRepository(self.db)
+        self.mapping_repo = SQLiteMappingRepository(self.db)
+        self.export_repo = SQLiteExportRepository(self.db)
+        self.audit_repo = SQLiteAuditRepository(self.db)
 
         # Generators
         self.ddl_generator = BigQueryDDLGenerator(self.renderer, project_id)

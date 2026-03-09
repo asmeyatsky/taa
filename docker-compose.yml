@@ -6,6 +6,12 @@ services:
     environment:
       - TAA_SECRET_KEY=${TAA_SECRET_KEY:-taa-dev-secret-key-change-in-production}
       - TAA_TOKEN_EXPIRE_MINUTES=${TAA_TOKEN_EXPIRE_MINUTES:-480}
+      - TAA_DATABASE_URL=${TAA_DATABASE_URL:-sqlite:///./taa.db}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - TAA_LOG_LEVEL=${TAA_LOG_LEVEL:-INFO}
+      - TAA_RATE_LIMIT_ENABLED=${TAA_RATE_LIMIT_ENABLED:-true}
+    volumes:
+      - taa-data:/app/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
@@ -13,3 +19,6 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+
+volumes:
+  taa-data:

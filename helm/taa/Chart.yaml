@@ -1,0 +1,16 @@
+apiVersion: v2
+name: taa
+description: Telco Analytics Accelerator - Code generation tool for telco BSS/OSS configurations
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - telco
+  - analytics
+  - bss
+  - oss
+maintainers:
+  - name: TAA Team
+home: https://github.com/example/taa
+sources:
+  - https://github.com/example/taa

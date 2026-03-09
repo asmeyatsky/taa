@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taa-config
+  namespace: taa
+  labels:
+    app.kubernetes.io/name: taa
+    app.kubernetes.io/component: config
+data:
+  TAA_TOKEN_EXPIRE_MINUTES: "480"

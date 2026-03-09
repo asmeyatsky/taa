@@ -10,6 +10,8 @@ from taa.presentation.api.schemas import (
     SchemaUploadRequest,
     SchemaUploadResponse,
     MappingSuggestionItem,
+    AIMappingResponse,
+    AIMappingSuggestionItem,
 )
 
 router = APIRouter()
@@ -73,4 +75,43 @@ def upload_schema(
         ],
         mapping_coverage_pct=report.mapping_coverage_pct,
         import_coverage_pct=report.import_coverage_pct,
+    )
+
+
+@router.post("/schema/ai-map", response_model=AIMappingResponse)
+def ai_map_schema(
+    req: SchemaUploadRequest,
+    container: Container = Depends(get_container),
+) -> AIMappingResponse:
+    """Upload a BSS schema and get AI-powered mapping suggestions via Claude.
+
+    Gracefully degrades when ANTHROPIC_API_KEY is not set — returns an empty
+    suggestion list with an informational message.
+    """
+    from taa.application.use_cases.llm_mapping import LLMMappingUseCase
+    from taa.infrastructure.llm.claude_mapper import ClaudeSchemaMapper
+
+    mapper = ClaudeSchemaMapper()
+    use_case = LLMMappingUseCase(
+        domain_repo=container.domain_repo,
+        mapper=mapper,
+    )
+    result = use_case.execute(req.content, fmt=req.format)
+
+    return AIMappingResponse(
+        suggestions=[
+            AIMappingSuggestionItem(
+                vendor_table=s.vendor_table,
+                vendor_field=s.vendor_field,
+                canonical_table=s.canonical_table,
+                canonical_field=s.canonical_field,
+                confidence=s.confidence,
+                reasoning=s.reasoning,
+                transformation=s.transformation,
+            )
+            for s in result.suggestions
+        ],
+        model_used=result.model_used,
+        message=result.message,
+        available=result.available,
     )
